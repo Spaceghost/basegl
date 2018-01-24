@@ -1,15 +1,29 @@
 {
-  "name": "node-design",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "name": "basegl",
+  "version": "0.1.0",
+  "description": "A blazing fast WebGL drawing API. Currently supports two-dimensional operations, including SDF shapes, animation, mouse handling and SDF text (both online atlas baking as well as rendering).",
+  "homepage": "https://github.com/wdanilo/basegl#readme",
+  "author": "Wojciech Danilo <wojciech.danilo@gmail.com>",
+  "license": "MIT",
+  "main": "./dist/js/basegl.js",
   "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
     "build": "webpack",
     "watch": "webpack --progress --watch",
     "start": "webpack-dev-server --open"
   },
-  "author": "",
-  "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/wdanilo/basegl.git"
+  },
+  "keywords": [
+    "webgl",
+    "2d",
+    "graphics"
+  ],
+  "bugs": {
+    "url": "https://github.com/wdanilo/basegl/issues"
+  },
   "devDependencies": {
     "coffee-loader": "^0.9.0",
     "coffeescript": "next",
