@@ -52,19 +52,17 @@ normalNode = eval localExpr (border=0) ->
   angle = M.atan(dy/dx)
 
   maskPlane     = glslShape("-sdf_halfplane(p, vec2(1.0,0.0));").moveX(dx)
-  maskRect      = rect(r1+r2, r2 * M.cos(angle)).alignedTL.rotate(angle)
+  maskRect      = rect(r1+r2, r2 * M.cos(-angle)).alignedTL.rotate(-angle)
   mask          = (maskRect - maskPlane).inside
-  headerShape   = (circle(r1) + mask) - circle(r2).move(dx,-dy)
+  headerShape   = (circle(r1) + mask) - circle(r2).move(dx,dy)
   headerFill    = rect(r1*2, nodeRadius + headerOffset + 10).alignedTL.moveX(-r1)
-  header        = (headerShape + headerFill).move(nodeRadius,nodeRadius)
+  header        = (headerShape + headerFill).move(nodeRadius,nodeRadius).moveY(headerOffset+bodyHeight)
 
-  bodyShape     = rect(bodyWidth + 2*border, bodyHeight + 2*border, 0, nodeRadius).alignedTL
-  body          = bodyShape.moveY(2*nodeRadius + headerOffset).move(-border,-border)
+  body          = rect(bodyWidth + 2*border, bodyHeight + 2*border, 0, nodeRadius).alignedBL
   node          = (header + body).move(nodeSelectionBorderMaxSize,nodeSelectionBorderMaxSize)
   node          = node.fill nodeBg
 
   eye           = 'scaledEye.z'
-  # shadow        = node.blur(20)
   border        = node.grow(M.pow(M.clamp(eye*20.0, 0.0, 400.0),0.7)).grow(-1)
 
   sc            = selectionColor.copy()
@@ -72,6 +70,8 @@ normalNode = eval localExpr (border=0) ->
   border        = border.fill sc
 
   border + node
+  # node.fill(selectionColor)
+
   # shadow
 
 

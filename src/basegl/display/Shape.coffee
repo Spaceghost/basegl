@@ -386,8 +386,8 @@ export glslShape     = consAlias GLSLShape
 
 alignL = (a) -> a.move (negate a.bbox.left)  , 0
 alignR = (a) -> a.move (negate a.bbox.right) , 0
-alignT = (a) -> a.move 0, (negate a.bbox.top)
-alignB = (a) -> a.move 0, (negate a.bbox.bottom)
+alignT = (a) -> a.move 0, a.bbox.top
+alignB = (a) -> a.move 0, a.bbox.bottom
 
 alignTL = (a) -> alignT (alignL  a)
 alignTR = (a) -> alignT (alignR a)
@@ -402,6 +402,13 @@ Shape::alignTL = (args...) -> alignTL @, args...
 Shape::inside  = (args...) -> inside @, args...
 Shape.getter 'inside', -> inside @
 Shape.getter 'alignedTL', -> alignTL @
+Shape.getter 'alignedTR', -> alignTR @
+Shape.getter 'alignedBL', -> alignBL @
+Shape.getter 'alignedBR', -> alignBR @
+Shape.getter 'alignedL' , -> alignL @
+Shape.getter 'alignedR' , -> alignR @
+Shape.getter 'alignedT' , -> alignT @
+Shape.getter 'alignedB' , -> alignB @
 
 
 Shape::sub = (args...) -> @.difference args...

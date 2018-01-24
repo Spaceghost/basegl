@@ -522,15 +522,14 @@ vec3 sdf_debug (float a) {
 
 
 float sdf_rect(vec2 p, vec2 size, vec4 corners) {
-  // fixme - change names - tl should be 0 and its name is in fact bl!
-  float tl = corners[2];
-  float tr = corners[3];
-  float bl = corners[0];
-  float br = corners[1];
+  float tl = corners[0];
+  float tr = corners[1];
+  float bl = corners[2];
+  float br = corners[3];
 
   size /= 2.0;
 
-     if (p.x <  - size.x + tl && p.y >   size.y - tl ) { return length (p - vec2(- size.x + tl,   size.y - tl)) - tl; }
+       if (p.x <  - size.x + tl && p.y >   size.y - tl ) { return length (p - vec2(- size.x + tl,   size.y - tl)) - tl; }
   else if (p.x >    size.x - tr && p.y >   size.y - tr ) { return length (p - vec2(  size.x - tr,   size.y - tr)) - tr; }
   else if (p.x <  - size.x + bl && p.y < - size.y + bl ) { return length (p - vec2(- size.x + bl, - size.y + bl)) - bl; }
   else if (p.x >    size.x - br && p.y < - size.y + br ) { return length (p - vec2(  size.x - br, - size.y + br)) - br; }
