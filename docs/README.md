@@ -143,3 +143,5 @@ myShapeF = eval basegl.localExpr () ->
   base = circle(100) + circle(80).moveY(100) + circle(60).moveY(180)
   base.fill(Color.rgb [1,1,1,0.7]).move(200,200)
 ```
+
+![](https://user-images.githubusercontent.com/1623053/35362561-1bbdf300-0166-11e8-96ac-9b2c0ad1b2f9.png)
