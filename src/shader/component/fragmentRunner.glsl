@@ -36,11 +36,9 @@ void main() {
       }
   } else if (drawBuffer == 1) {
       if (pointerEvents > 0.0) {
-          gl_FragColor = vec4(componentFamilyID_r,componentID_r,float(sid),1.0);
+          gl_FragColor = vec4(componentFamilyID_r,componentID_r,float(sid),idMask);
       } else {
           gl_FragColor = vec4(0.0);
       }
   }
-  //gl_FragColor = vec4(1.,0.,0.,1.);
-  //gl_FragColor = vec4(luv.x, luv.y, 0., 1.);
 }
