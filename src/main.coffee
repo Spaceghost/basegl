@@ -8,10 +8,9 @@ import {Component, group}      from 'basegl/display/Component'
 import {circle, glslShape, union, grow, negate, rect, quadraticCurve, path}      from 'basegl/display/Shape'
 import {Navigator}      from 'basegl/navigation/Navigator'
 import {world}      from 'basegl/display/World'
-import * as basegl from 'basegl/display/Scene'
+import * as basegl from 'basegl'
 import * as Shape     from 'basegl/display/Shape'
 
-import {expr, localExpr}        from 'basegl/math/Common'
 M = require 'basegl/math/Common'
 
 
@@ -22,25 +21,27 @@ import {BoxSelector} from 'basegl/display/Selection'
 import * as Font from 'basegl/display/text/sdf/Atlas'
 
 
-nodeRadius = 30
-gridElemOffset  = 18
-arrowOffset = gridElemOffset + 2
+
+
+#######################
+### Node Definition ###
+#######################
+
+nodeRadius     = 30
+gridElemOffset = 18
+arrowOffset    = gridElemOffset + 2
 
 nodeSelectionBorderMaxSize = 40
 
 nodew = 300
 nodeh = 700
 
-white     = Color.rgb [1,1,1]
-bg        = (Color.hsl [40,0.08,0.09]).toRGB()
+white          = Color.rgb [1,1,1]
+bg             = (Color.hsl [40,0.08,0.09]).toRGB()
 selectionColor = bg.mix (Color.hsl [50, 1, 0.6]), 0.8
-nodeBg    = bg.mix white, 0.04
+nodeBg         = bg.mix white, 0.04
 
-# nodeBg = bg.copy()
-# nodeBg.l += 0.08
-# nodeBg.s /= 2
-
-normalNode = eval localExpr (border=0) ->
+normalNode = eval basegl.localExpr (border=0) ->
   bodyWidth    = 300
   bodyHeight   = 600
   slope        = 20
@@ -70,14 +71,17 @@ normalNode = eval localExpr (border=0) ->
   border        = border.fill sc
 
   border + node
-  # node.fill(selectionColor)
-
-  # shadow
-
 
 nodeShape = normalNode()
 
 
+myShapef = eval basegl.localExpr () ->
+  circle 100
+
+myShape = myShapef()
+
+
+### Utils ###
 
 makeDraggable = (a) ->
   a.addEventListener 'mousedown', (e) ->
@@ -121,12 +125,19 @@ makeSelectable = (a) ->
 
 
 
-
-
+### Testing ###
 
 main = () ->
 
   scene = basegl.scene {domElement: 'basegl-root'}
+
+  myShapeDef = new Component myShape
+  myShapeDef.bbox.xy = [200,200]
+
+  myShape1 = scene.add myShapeDef
+  myShape1.position.xy = [0,0]
+
+  return
   controls = new Navigator scene
 
   fontManager = new Font.FontManager null

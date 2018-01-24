@@ -152,6 +152,7 @@ export class Component
 
   @getter 'instances', -> [@_instances...]
 
+# component = consAlias Component
 
 
 #########################
