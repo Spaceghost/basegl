@@ -1,0 +1,9 @@
+precision highp float;
+precision highp int;
+varying vec2 luv;
+varying vec3 world;
+varying vec3 local;
+varying vec2 stageDim;
+varying vec3 eye;
+varying vec3 scaledEye;
+varying float zoomLevel;
