@@ -172,14 +172,8 @@ myShapeF = eval basegl.localExpr () ->
 
 
 ## Dynamic shapes
-It is possible to create dynamic shapes - shapes that change over time or react to mouse position
-Let's make something more interesting, a dancing snowman a'la Picasso! Snowman is basically 3 circles on top of each other:
+As we already mentioned, shapes are rendered on your GPU. It does not however mean that they have to be static images! You can both parametrize shapes with your own variables as well as use predefined ones:
 
-```coffeescript
-myShapeF = eval basegl.localExpr () ->
-  base = circle(100) + circle(80).moveY(100) + circle(60).moveY(180)
-  base.fill(Color.rgb [1,1,1,0.7]).move(200,200)
-```
-
-![](https://user-images.githubusercontent.com/1623053/35362561-1bbdf300-0166-11e8-96ac-9b2c0ad1b2f9.png)
-
+| Variable name     | Description  |
+| ----------------- |:------------ |
+| `time`            | The number of miliseconds between creation of the Scene and current time. |
