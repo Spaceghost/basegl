@@ -160,6 +160,15 @@ myShapeF = eval basegl.localExpr () ->
 
 ![](https://user-images.githubusercontent.com/1623053/35364798-71898b18-0171-11e8-89b7-bc2fece615ae.png)
 
+BaseGL provides you with dozens combinators and different options. The `+` operator is alias for `Shape.union`. You can for example use `Shape.unionRound` instead to round corners when merging any shapes together! 
+
+```coffeescript
+myShapeF = eval basegl.localExpr () ->
+  base = circle(100) + circle(100).moveX(160) + circle(100).move(80,80) + circle(100).move(80,-80)
+  border = base - base.shrink(16)
+  border.fill(Color.rgb [0,0,0,1]).move(170,250)
+```
+![](https://user-images.githubusercontent.com/1623053/35364953-3d20365a-0172-11e8-8fcf-292a097e44b5.png)
 
 
 ## Dynamic shapes
