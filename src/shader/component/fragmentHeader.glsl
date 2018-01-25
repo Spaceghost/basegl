@@ -1,6 +1,6 @@
 precision highp float;
 precision highp int;
-varying vec2 luv;
+varying vec2 uv;
 varying vec3 world;
 varying vec3 local;
 varying vec2 stageDim;

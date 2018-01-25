@@ -9,6 +9,24 @@ import * as Image        from 'basegl/display/Image'
 
 
 
+
+
+export variables =
+  time        : "time"
+  zoom        : "zoom"
+  world_mouse : "world_mouse"
+
+  dim            : "dim"
+  uv             : "uv"
+  world          : "world"
+  local          : "local"
+  mouse          : "mouse"
+  pointerEvents  : "pointerEvents "
+  symbolID       : "symbolID"
+  symbolFamilyID : "symbolFamilyID"
+
+
+
 attribSizeByType = new Map \
   [ ['bool'  , 1]
   , ['int'   , 1]
@@ -108,7 +126,7 @@ export class Symbol
     @variables.xform4         = typedValue 'vec4'
     @variables.symbolID       = 0
     @variables.symbolFamilyID = 0
-    @variables.pointerEvents  = 0
+    @variables.pointerEvents  = 1
     @variables.zIndex         = 0
 
     @globalVariables.zoom        = 1
@@ -173,7 +191,7 @@ export class SymbolGeometry
 
     @geometry.index               = @bufferGeometry.index
     @geometry.attributes.position = @bufferGeometry.attributes.position
-    @geometry.attributes.uv       = @bufferGeometry.attributes.uv
+    @geometry.attributes.v_uv     = @bufferGeometry.attributes.uv
 
     # what a hack :(
     @geometry.computeBoundingSphere()

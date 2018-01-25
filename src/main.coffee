@@ -4,7 +4,8 @@ import * as Detector  from './detector'
 import * as Color     from 'basegl/display/Color'
 
 import {POINTER_EVENTS}      from 'basegl/display/DisplayObject'
-import {Symbol, group}      from 'basegl/display/Symbol'
+import {group}      from 'basegl/display/Symbol'
+import * as Symbol from 'basegl/display/Symbol'
 import {circle, glslShape, union, grow, negate, rect, quadraticCurve, path}      from 'basegl/display/Shape'
 import {Navigator}      from 'basegl/navigation/Navigator'
 import {world}      from 'basegl/display/World'
@@ -129,9 +130,8 @@ makeSelectable = (a) ->
 
 
 myShapeF = eval basegl.localExpr () ->
-  base    = circle(M.sin('time'/100)*20+100) + circle(M.sin('time'/170)*14 + 80).moveY(100) + circle(M.sin('time'/150)*10 + 60).moveY(180)
-  contour = base.grow(10) - base
-  contour.fill(Color.rgb [0,0,0,0.7]).move(200,200)
+  base    = circle('myVar')
+  base.fill(Color.rgb [0,0,0,0.7]).move(200,200)
 #
 # myShapeF = eval basegl.localExpr () ->
 #   base = Shape.unionRound 16, circle(100), circle(100).moveX(160), circle(100).move(80,80), circle(100).move(80,-80)
@@ -147,8 +147,11 @@ main = () ->
 
   scene = basegl.scene {domElement: 'basegl-root'}
 
-  mySymbol  = basegl.symbol myShape
-  mySymbol1 = scene.add mySymbol
+  # mySymbol  = basegl.symbol myShape
+  # mySymbol.globalVariables.myVar = 100
+  # mySymbol1 = scene.add mySymbol
+  #
+  # return
 
   #
   #
