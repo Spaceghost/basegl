@@ -255,4 +255,9 @@ You should always choose wisely wheter to use global or local variable, because 
 
 
 
+# Symbol Object Model (SOM)
+
+Symbols are very similar to DOM. In fact, you can think about them and shapes just like about DOM elements. You can group symbols together using `Symbol.group`, you can attach `EventListeners` to symbols and shapes, and you can listen for events in capturing and bubbling stages. In fact, they just implement the same API. Example:
+
+TODO
 
