@@ -139,6 +139,8 @@ That's it! You should see a red ring on your screen!
 Ok, let's create something more exciting. Four circles! Four circles is the most exciting thing I can currently imagine:
 
 ```coffeescript
+import * as Color from 'basegl/display/Color'
+
 myShapeF = eval basegl.localExpr () ->
   base = circle(100) + circle(100).moveX(100) + circle(100).move(50,50) + circle(100).move(50,-50)
   base.fill(Color.rgb [0,0,0,1]).move(200,250)
