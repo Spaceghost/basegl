@@ -108,7 +108,7 @@ myShape = basegl.expr do ->
 ...and using the run-time-eval syntax:
 
 ```coffeescript
-myShape = eval basegl.localExpr do ->
+myShape = do ->
   circle 100 - circle 80
 ```
 
@@ -141,7 +141,7 @@ Ok, let's create something more exciting. Four circles! Four circles is the most
 ```coffeescript
 import * as Color from 'basegl/display/Color'
 
-myShapeF = eval basegl.localExpr () ->
+myShape = do ->
   base = circle(100) + circle(100).moveX(100) + circle(100).move(50,50) + circle(100).move(50,-50)
   base.fill(Color.rgb [0,0,0,1]).move(200,250)
 ```
@@ -154,7 +154,7 @@ BaseGL provides extensible debugging tools allowing you to inspect the shapes an
 This is visualisation of your shape SDF field. Blue part is inside, the violet part is outside the shape. By looking at the visualisation you can understand how `grow` and `shrink` functions work - they just allow you to grow or shrink the blue part. Let's move the circles further outside, shrink our shape a little bit and subtract it from the original one!
 
 ```coffeescript
-myShapeF = eval basegl.localExpr () ->
+myShape = do ->
   base = circle(100) + circle(100).moveX(160) + circle(100).move(80,80) + circle(100).move(80,-80)
   border = base - base.shrink(16)
   border.fill(Color.rgb [0,0,0,1]).move(170,250)
@@ -165,7 +165,7 @@ myShapeF = eval basegl.localExpr () ->
 BaseGL provides you with dozens combinators and different options. The `+` operator is alias for `Shape.union`. You can for example use `Shape.unionRound` instead to round corners when merging any shapes together! 
 
 ```coffeescript
-myShapeF = eval basegl.localExpr () ->
+myShape = do ->
   base = circle(100) + circle(100).moveX(160) + circle(100).move(80,80) + circle(100).move(80,-80)
   border = base - base.shrink(16)
   border.fill(Color.rgb [0,0,0,1]).move(170,250)
@@ -173,10 +173,86 @@ myShapeF = eval basegl.localExpr () ->
 ![](https://user-images.githubusercontent.com/1623053/35364953-3d20365a-0172-11e8-8fcf-292a097e44b5.png)
 
 
-## Parametric and dynamic shapes
-As we already mentioned, shapes are rendered on your GPU. It does not however mean that they have to be static images! You can both parametrize shapes with your own variables as well as use predefined ones:
+# Symbols
 
-| Variable name     | Description  |
-| ----------------- |:------------ |
-| `time`            | The number of miliseconds between creation of the Scene and current time. |
-| `zoom`            | The camera zoom. The value of 1 mean that one shape unit corresponds to one pixel on the screen |
+## What are symbols?
+
+## Parametric symbols
+As we already mentioned, shapes are rendered on your GPU. It does not however mean that they have to be static images! You can both parametrize shapes with your own variables as well as use predefined ones. There are two variable types in BaseGL - global and local. Global variables have the same value across all instances of a particular symbol, while local variables can be set per symbol. 
+
+BaseGL has the ability to compile JavaScript code to GPU programs. For example if you create a shape `circle(10 + Math.sin(time/100)).moveX(2*20)` it would be compiled to GLSL code `sdf_circle(sdf_move(p,40.0), 10.0 + sin(time/100.0))`. Please take a look that expressions which could not be evaluated in JavaScript were converted to expressions in GLSL. Magic.
+
+
+### Predefined variables
+
+Before learning how to define custom variables, let's take a look at the predefined ones!
+
+Global variables:
+
+| Variable name     | Type      | Description   |
+| ----------------- |:--------- | :------------ |
+| `time`            | `Number`  | The number of miliseconds between creation of the Scene and current time. |
+| `zoom`            | `Number`  | The camera zoom. The value of 1 mean that one shape unit corresponds to one pixel on the screen. |
+| `world_mouse`     | `Vector2` | Mouse position in world coordinates (NOT IMPLEMENTED) |
+
+
+Local variables:
+
+| Variable name     | Type      | Description   |
+| ----------------- |:--------- | :------------ |
+| `dim`             | `Vector2` | The symbol dimensions. |
+| `uv`              | `Vector2` | The local position in UV space (normalized XY space). |
+| `world`           | `Vector3` | The current point position in world coordinates. |
+| `local`           | `Vector3` | The current point position in local coordinates. |
+| `mouse`           | `Vector2` | Mouse position in local coordinates (NOT IMPLEMENTED) |
+| `pointerEvents`   | `Boolean` | Indicates wheter the symbol sends pointer events. |
+| `symbolID`        | `Number`  | The current symbol ID. |
+| `symbolFamilyID`  | `Number`  | The current symbol family ID. |
+
+You can access the variables by using `Shape.variables` dictionary, for example, let's create a bunch of dancing circles:
+
+```coffeescript
+import * as Symbol from 'basegl/display/Symbol'
+import * as M      from 'basegl/math/Common'
+
+myShape = do ->
+  time    = Symbol.variables.time
+  base    = circle(M.sin(time/100)*20+100) + circle(M.sin(time/170)*14 + 80).moveY(100) + circle(M.sin(time/150)*10 + 60).moveY(180)
+  contour = base.grow(10) - base
+  contour.fill(Color.rgb [0,0,0,0.7]).move(200,200)
+```
+
+The `M` module is just like JavaScript `Math` module but works both in JavaScript as well as on your GPU.
+
+
+### Creating custom variables
+
+One of the life's truth is that almost nothing is simpler than creating variable bindings in BaseGL! To create a binding ... just use its name! That's right! Example to the rescue!
+
+```coffeescript
+myShape = do ->
+  base    = circle('myVar')
+  base.fill(Color.rgb [0,0,0,0.7]).move(200,200)
+```
+
+```coffeescript
+mySymbol  = basegl.symbol myShape
+mySymbol.globalVariables.myVar = 100
+mySymbol1 = scene.add mySymbol
+```
+
+As soon as you change the variable in JavaScript, the image will be updated. This way we have created a global variable. How to create a local variable? You only have to change the last lines of code to:
+
+```
+mySymbol  = basegl.symbol myShape
+mySymbol.variables.myVar = 100
+mySymbol1 = scene.add mySymbol
+```
+
+Now we have defined a local variable that we can set later per symbol instance, for example `mySymbol1.variables.myVar = 20`. You are probably wondering how are the special `Symbol.variables` defined. The answer is - they are just strings defined for your convinence!
+
+You should always choose wisely wheter to use global or local variable, because it could drastically affect the performance. The `zoom` variable is a good example. Let's assume you want to create thousands of nodes in a graph. Each node should have a border and this border should grow if you zoom the graph out and should shring if you zoom in. The `zoom` variable is defined as global, so it is set once per frame, NOT per every component!
+
+
+
+
