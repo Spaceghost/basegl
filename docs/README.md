@@ -136,7 +136,35 @@ That's it! You should see a red ring on your screen!
 ![](https://user-images.githubusercontent.com/1623053/35360399-df0116b6-015d-11e8-9b59-9b98577487d0.png)
 
 
-Let's make something more interesting, a dancing snowman ala picasso! Snowman is basically 3 circles on top of each other:
+Ok, let's create something more exciting. Four circles! Four circles is the most exciting thing I can currently imagine:
+
+```coffeescript
+myShapeF = eval basegl.localExpr () ->
+  base = circle(100) + circle(100).moveX(100) + circle(100).move(50,50) + circle(100).move(50,-50)
+  base.fill(Color.rgb [0,0,0,1]).move(200,250)
+```
+![](https://user-images.githubusercontent.com/1623053/35364482-b551218c-016f-11e8-8496-46c1f15cff4c.png)
+
+BaseGL provides extensible debugging tools allowing you to inspect the shapes and understand the underlying SDF. You will learn more about the tools in the following chapters, for now just press <kbd>ctrl</kbd> + <kbd>alt</kbd> + <kbd>1</kbd>:
+
+![](https://user-images.githubusercontent.com/1623053/35364610-5ff85cae-0170-11e8-8ab2-2bca26dc0a22.png)
+
+This is visualisation of your shape SDF field. Blue part is inside, the violet part is outside the shape. By looking at the visualisation you can understand how `grow` and `shrink` functions work - they just allow you to grow or shrink the blue part. Let's move the circles further outside, shrink our shape a little bit and subtract it from the original one!
+
+```coffeescript
+myShapeF = eval basegl.localExpr () ->
+  base = circle(100) + circle(100).moveX(160) + circle(100).move(80,80) + circle(100).move(80,-80)
+  border = base - base.shrink(16)
+  border.fill(Color.rgb [0,0,0,1]).move(170,250)
+```
+
+![](https://user-images.githubusercontent.com/1623053/35364798-71898b18-0171-11e8-89b7-bc2fece615ae.png)
+
+
+
+## Dynamic shapes
+It is possible to create dynamic shapes - shapes that change over time or react to mouse position
+Let's make something more interesting, a dancing snowman a'la Picasso! Snowman is basically 3 circles on top of each other:
 
 ```coffeescript
 myShapeF = eval basegl.localExpr () ->
@@ -145,3 +173,4 @@ myShapeF = eval basegl.localExpr () ->
 ```
 
 ![](https://user-images.githubusercontent.com/1623053/35362561-1bbdf300-0166-11e8-96ac-9b2c0ad1b2f9.png)
+
