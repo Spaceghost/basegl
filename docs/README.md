@@ -171,9 +171,10 @@ myShapeF = eval basegl.localExpr () ->
 ![](https://user-images.githubusercontent.com/1623053/35364953-3d20365a-0172-11e8-8fcf-292a097e44b5.png)
 
 
-## Dynamic shapes
+## Parametric and dynamic shapes
 As we already mentioned, shapes are rendered on your GPU. It does not however mean that they have to be static images! You can both parametrize shapes with your own variables as well as use predefined ones:
 
 | Variable name     | Description  |
 | ----------------- |:------------ |
 | `time`            | The number of miliseconds between creation of the Scene and current time. |
+| `zoom`            | The camera zoom. The value of 1 mean that one shape unit corresponds to one pixel on the screen |
