@@ -7,10 +7,10 @@ import * as Image    from 'basegl/display/Image'
 import * as OpenType from 'opentype.js'
 import * as Promise  from 'bluebird'
 
-import {Component, group}   from 'basegl/display/Component'
+import {Symbol, group}   from 'basegl/display/Symbol'
 import {BinPack}     from 'basegl/display/text/sdf/BinPack'
 import {Composition} from 'basegl/object/Property'
-import {typedValue}  from 'basegl/display/Component'
+import {typedValue}  from 'basegl/display/Symbol'
 
 
 
@@ -241,14 +241,14 @@ export class Atlas extends Composition
       @_font = font
       @
 
-    @_letterDef = new Component letterShape
+    @_letterDef = new Symbol letterShape
     @_letterDef.bbox.xy = [64,64]
     @_letterDef.variables.glyphLoc  = typedValue 'vec4' # FIXME
     @_letterDef.variables.glyphZoom = 1
     @_letterDef.globalVariables.glyphsTexture = @texture
     @_letterDef.globalVariables.glyphsTextureSize = @size
 
-    @_glyphComponent = new Component glyphShape
+    @_glyphSymbol = new Symbol glyphShape
 
 
   getInfo: (glyph) ->
@@ -295,11 +295,11 @@ export class Atlas extends Composition
 
     shapeDef = generatePathsTexture glyphPaths
 
-    @_glyphComponent.globalVariables.commands = shapeDef.texture
-    @_glyphComponent.globalVariables.size     = shapeDef.size
-    @_glyphComponent.globalVariables.spread   = @spread
-    @_glyphComponent.variables.offset     = 0
-    @_glyphComponent.variables.nextOffset = 0
+    @_glyphSymbol.globalVariables.commands = shapeDef.texture
+    @_glyphSymbol.globalVariables.size     = shapeDef.size
+    @_glyphSymbol.globalVariables.spread   = @spread
+    @_glyphSymbol.variables.offset     = 0
+    @_glyphSymbol.variables.nextOffset = 0
 
     offX = 0
     for [loc, offset, nextOffset] in zip(locs, shapeDef.offsets, shapeDef.offsets.slice(1))
@@ -307,7 +307,7 @@ export class Atlas extends Composition
       ly = loc.y - loc.spread
       lw = loc.width  + 2*loc.spread
       lh = loc.height + 2*loc.spread
-      glyphInstance = @scene.add @_glyphComponent
+      glyphInstance = @scene.add @_glyphSymbol
       glyphInstance.position.xy = [lx,ly]
       glyphInstance.bbox.xy     = [lw, lh]
       glyphInstance.variables.offset     = offset

@@ -11,8 +11,8 @@ eye.z              = -eye.z;
 scaledEye          = eye;
 scaledEye.z        = scaledEye.z / 1000.0;
 
-componentID        = v_componentID;
-componentFamilyID  = v_componentFamilyID;
+symbolID           = v_symbolID;
+symbolFamilyID     = v_symbolFamilyID;
 pointerEvents      = v_pointerEvents;
 zIndex             = v_zIndex;
 

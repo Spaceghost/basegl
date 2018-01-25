@@ -2,7 +2,7 @@ require("modulereg").registerModule __filename, (require __filename)
 
 
 import {localExpr} from 'basegl/math/Common'
-import {Component} from 'basegl/display/Component'
+import {Symbol}    from 'basegl/display/Symbol'
 import {rect}      from 'basegl/display/Shape'
 import * as Color  from 'basegl/display/Color'
 M = require 'basegl/math/Common'
@@ -16,9 +16,9 @@ selectionColor = bg.mix (Color.hsl [50, 1, 0.6]), 0.8
 ############################
 ### ComponentBufferProxy ###
 ############################
-# The ComponentBufferProxy object translates (x,y) coordinates to component reference (null if missing).
-# It uses an `buffer` object containing componentFamilyID, componentID and shapeID values to determine
-# which component to choose
+# The ComponentBufferProxy object translates (x,y) coordinates to symbol reference (null if missing).
+# It uses an `buffer` object containing symbolFamilyID, symbolID and shapeID values to determine
+# which symbol to choose
 
 export class ComponentBufferProxy
   constructor: (@scene, @buffer) ->
@@ -31,22 +31,22 @@ export class ComponentBufferProxy
     if a != undefined then return a
 
     idx4 = 4*idx
-    componentFamilyID = @buffer[idx4]
-    componentID       = @buffer[idx4+1]
-    shapeID           = @buffer[idx4+2]
-    component         = null
+    symbolFamilyID = @buffer[idx4]
+    symbolID       = @buffer[idx4+1]
+    shapeID        = @buffer[idx4+2]
+    symbol         = null
     if shapeID != 0
-      family = @scene.model.lookupComponentFamily componentFamilyID
-      if family? then component = family.lookupComponent componentID
-    @_resolved[idx] = component
-    component
+      family = @scene.model.lookupComponentFamily symbolFamilyID
+      if family? then symbol = family.lookupComponent symbolID
+    @_resolved[idx] = symbol
+    symbol
 
 
 
 ################
 ### QuadTree ###
 ################
-# Optimized for component lookup from big, underlying pixel id array
+# Optimized for symbol lookup from big, underlying pixel id array
 
 export class QuadTree
   constructor: (@width, @height, @_arr, @spread=1, @mul=1, @subtree=null, @lvl=0) ->
@@ -162,7 +162,7 @@ export class QuadTree
 
 export boxSelectorShape = eval localExpr () ->
   cd   = selectionColor.copy()
-  cd.a = 0.3 
+  cd.a = 0.3
   rect('dim.x', 'dim.y').alignedTL.fill(cd)
 
 
@@ -211,22 +211,22 @@ export class BoxSelector
 
           if @benchmark then t0 = performance.now();
 
-          components = null
+          symbols = null
 
           if @mode == 'quadtree'
-            components = qt.sampleRect x0, y0, x1, y1
-            components.delete null
+            symbols = qt.sampleRect x0, y0, x1, y1
+            symbols.delete null
           else if @mode = 'bruteforce'
-            components = new Set
+            symbols = new Set
             for y in [y0..y1]
               for x in [x0..x1]
-                components.add cpb.get(x,y)
+                symbols.add cpb.get(x,y)
 
           if @benchmark
             t1 = performance.now();
             console.log "BoxSelector time: #{Math.round(t1-t0)} ms"
 
-          @callback components
+          @callback symbols
 
 
         window.addEventListener 'mousemove', onMouseMove

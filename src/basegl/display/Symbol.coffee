@@ -40,7 +40,7 @@ inferAttribType = (a) ->
 
 
 #################
-### Component ###
+### Symbol ###
 #################
 
 export DRAW_BUFFER =
@@ -54,9 +54,9 @@ export typedValue = Property.consAlias TypedValue
 export int   = (args...) -> typedValue 'int'   , args...
 export float = (args...) -> typedValue 'float' , args...
 
-export class Component
+export class Symbol
   constructor: (@shape) ->
-    @bbox              = new Vector
+    @bbox              = new Vector [512,512]
     @_instances        = new Set
     @_localVariables   = new Map
     @_globalVariables  = new Map
@@ -98,22 +98,23 @@ export class Component
 
   _initDefaultVariables: () ->
     # FIXME (when WebGL > 2.0)
-    # We need to pass componentID and componentFamilyID as floats
+    # We need to pass symbolID and symbolFamilyID as floats
     # until we hit WebGL 2.0 with "flat" attribute support.
     # For more information, see https://github.com/mrdoob/three.js/issues/9965
-    @variables.dim               = typedValue 'vec2'
-    @variables.xform1            = typedValue 'vec4'
-    @variables.xform2            = typedValue 'vec4'
-    @variables.xform3            = typedValue 'vec4'
-    @variables.xform4            = typedValue 'vec4'
-    @variables.componentID       = 0
-    @variables.componentFamilyID = 0
-    @variables.pointerEvents     = 0
-    @variables.zIndex            = 0
+    @variables.dim            = typedValue 'vec2'
+    @variables.xform1         = typedValue 'vec4'
+    @variables.xform2         = typedValue 'vec4'
+    @variables.xform3         = typedValue 'vec4'
+    @variables.xform4         = typedValue 'vec4'
+    @variables.symbolID       = 0
+    @variables.symbolFamilyID = 0
+    @variables.pointerEvents  = 0
+    @variables.zIndex         = 0
 
-    @globalVariables.zoom = 1
+    @globalVariables.zoom        = 1
     @globalVariables.displayMode = int 0
     @globalVariables.drawBuffer  = int DRAW_BUFFER.NORMAL
+    @globalVariables.time        = 0
 
 
   ### Variables ###
@@ -152,16 +153,16 @@ export class Component
 
   @getter 'instances', -> [@_instances...]
 
-# component = consAlias Component
+export symbol = Property.consAlias Symbol
 
 
 #########################
-### ComponentGeometry ###
+### SymbolGeometry ###
 #########################
 
-export class ComponentGeometry
+export class SymbolGeometry
   constructor: (@attributeMap=new Map, @maxElements=1000) ->
-    @_componentIDPool = new IdxPool 1
+    @_symbolIDPool = new IdxPool 1
 
     @attributeTypeMap = new Map
     @buffers    = {}
@@ -209,33 +210,33 @@ export class ComponentGeometry
 
   reserveID: () ->
     # FIXME: handle reshaping
-    @_componentIDPool.reserve()
+    @_symbolIDPool.reserve()
 
 
 
 #######################
-### ComponentFamily ###
+### SymbolFamily ###
 #######################
 
-export class ComponentFamily
-  constructor: (@id, @definition, @geometry=new ComponentGeometry) ->
+export class SymbolFamily
+  constructor: (@id, @definition, @geometry=new SymbolGeometry) ->
     @_mesh = new THREE.Mesh @geometry.geometry, @definition.material
-    @_componentIDMap = new Map
+    @_symbolIDMap = new Map
 
   newInstance: () ->
     id   = @geometry.reserveID()
-    inst = new ComponentInstance id, @
+    inst = new SymbolInstance id, @
     @definition.registerInstance inst
-    @_componentIDMap.set id, inst
+    @_symbolIDMap.set id, inst
     inst
 
-  lookupComponent: (id) -> @_componentIDMap.get id
+  lookupSymbol: (id) -> @_symbolIDMap.get id
 
 
 
 
 
-export class ComponentInstance extends DisplayObject
+export class SymbolInstance extends DisplayObject
   constructor: (@id, @family) ->
     super()
     @bbox = @family.definition.bbox.clone()
@@ -247,8 +248,9 @@ export class ComponentInstance extends DisplayObject
         @setVariable name, val
         true
 
-    @variables.componentID       = [@id]
-    @variables.componentFamilyID = [@family.id]
+    @variables.symbolID       = [@id]
+    @variables.symbolFamilyID = [@family.id]
+    @_updatePosition()
 
 
   setOrigin: (args...) ->
@@ -280,5 +282,5 @@ export group = (children) ->
   obj
 
 
-# export class ComponentInstanceProxy extends DisplayObject
+# export class SymbolInstanceProxy extends DisplayObject
 #   constructor: (@def) ->

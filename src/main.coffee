@@ -4,7 +4,7 @@ import * as Detector  from './detector'
 import * as Color     from 'basegl/display/Color'
 
 import {POINTER_EVENTS}      from 'basegl/display/DisplayObject'
-import {Component, group}      from 'basegl/display/Component'
+import {Symbol, group}      from 'basegl/display/Symbol'
 import {circle, glslShape, union, grow, negate, rect, quadraticCurve, path}      from 'basegl/display/Shape'
 import {Navigator}      from 'basegl/navigation/Navigator'
 import {world}      from 'basegl/display/World'
@@ -21,7 +21,11 @@ import {BoxSelector} from 'basegl/display/Selection'
 import * as Font from 'basegl/display/text/sdf/Atlas'
 
 
+import {animationManager} from 'basegl/animation/Manager'
 
+
+# animationManager.fpsLimit = 60
+# animationManager.maxMissingFrames = 1
 
 #######################
 ### Node Definition ###
@@ -75,10 +79,6 @@ normalNode = eval basegl.localExpr (border=0) ->
 nodeShape = normalNode()
 
 
-myShapef = eval basegl.localExpr () ->
-  circle 100
-
-myShape = myShapef()
 
 
 ### Utils ###
@@ -86,40 +86,40 @@ myShape = myShapef()
 makeDraggable = (a) ->
   a.addEventListener 'mousedown', (e) ->
     if e.button != 0 then return
-    component = e.component
+    symbol = e.symbol
     s          = world.activeScene
     fmove = (e) ->
-      component.position.x += e.movementX * s.camera.zoomFactor
-      component.position.y -= e.movementY * s.camera.zoomFactor
+      symbol.position.x += e.movementX * s.camera.zoomFactor
+      symbol.position.y -= e.movementY * s.camera.zoomFactor
     window.addEventListener 'mousemove', fmove
     window.addEventListener 'mouseup', () =>
       window.removeEventListener 'mousemove', fmove
 
-applySelectAnimation = (component, rev=false) ->
-  if component.selectionAnimation?
-  then component.selectionAnimation.reverse()
+applySelectAnimation = (symbol, rev=false) ->
+  if symbol.selectionAnimation?
+  then symbol.selectionAnimation.reverse()
   else
     anim = Animation.create
       easing      : Easing.quadInOut
       duration    : 0.1
-      onUpdate    : (v) -> component.variables.selected = v
-      onCompleted :     -> delete component.selectionAnimation
+      onUpdate    : (v) -> symbol.variables.selected = v
+      onCompleted :     -> delete symbol.selectionAnimation
     if rev then anim.inverse()
     anim.start()
-    component.selectionAnimation = anim
+    symbol.selectionAnimation = anim
     anim
 
 selectedComponent = null
 makeSelectable = (a) ->
   a.addEventListener 'mousedown', (e) ->
     if e.button != 0 then return
-    component = e.component
-    if selectedComponent == component then return
-    applySelectAnimation component
+    symbol = e.symbol
+    if selectedComponent == symbol then return
+    applySelectAnimation symbol
     if selectedComponent
       applySelectAnimation selectedComponent, true
       selectedComponent.variables.zIndex = 1
-    selectedComponent = component
+    selectedComponent = symbol
     selectedComponent.variables.zIndex = -10
 
 
@@ -127,20 +127,96 @@ makeSelectable = (a) ->
 
 ### Testing ###
 
+
+myShapeF = eval basegl.localExpr () ->
+  base    = circle(M.sin('time'/100)*20+100) + circle(M.sin('time'/170)*14 + 80).moveY(100) + circle(M.sin('time'/150)*10 + 60).moveY(180)
+  contour = base.grow(10) - base
+  contour.fill(Color.rgb [0,0,0,0.7]).move(200,200)
+#
+# myShapeF = eval basegl.localExpr () ->
+#   base = Shape.unionRound 16, circle(100), circle(100).moveX(160), circle(100).move(80,80), circle(100).move(80,-80)
+#   border = base - base.shrink(16)
+#   border.fill(Color.rgb [0,0,0,1]).move(170,250)
+
+myShape = myShapeF()
+
+
+
+
 main = () ->
 
   scene = basegl.scene {domElement: 'basegl-root'}
 
-  myShapeDef = new Component myShape
-  myShapeDef.bbox.xy = [200,200]
+  mySymbol  = basegl.symbol myShape
+  mySymbol1 = scene.add mySymbol
 
-  myShape1 = scene.add myShapeDef
-  myShape1.position.xy = [0,0]
+  #
+  #
+  # myComponent1 = scene.add myComponentDef
+  # myComponent1.position.xy = [0,0]
+  #
+  # myComponent2 = scene.add myComponentDef
+  # myComponent2.position.xy = [0,300]
+  # myComponent2.variables.piotrus = 30
+  #
+  # controls = new Navigator scene
+  #
+  # myComps = group [myComponent1, myComponent2]
+  # myComps.position.x += 100
+  #
+  # # for i in [0..1000]
+  # #   myC = scene.add myComponentDef
+  # #   myC.position.xy = [i * 100,300]
+  # #   myC.variables.piotrus = 30
+  #
+  # # scene.camera.position.z = 10 ## FIXME: czemu nadpisujemy?
+  # # c2 = c.grow(-eye*10) - c ## blad parsowania minusow
+  # # TODO: mouseenter
+  # TODO: post processor
+  #
+  # myComponent2.variables.pointerEvents = 1
+  # myComponent2.style.childrenPointerEvents = POINTER_EVENTS.DISABLED
+  #
+  # makeDraggable myComponent2
+  #
+  #
+  # myComponent2.addEventListener 'mouseover', (e) ->
+  #   console.log "OVER NODE 1!"
+  #
+  # window.navi = controls
+  #
+  #
+  # return
 
-  return
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   controls = new Navigator scene
 
-  fontManager = new Font.FontManager null
+  fontManager = new Font.FontManager null # FIME remove null
   atlas = fontManager.load
     fontFamily : 'fonts/DejaVuSansMono.ttf'
     size       : 2048
@@ -152,7 +228,7 @@ main = () ->
 
 
 
-  nodeDef = new Component nodeShape
+  nodeDef = basegl.symbol nodeShape
   nodeDef.variables.selected = 0
   nodeDef.bbox.xy = [nodew + 2*nodeSelectionBorderMaxSize, nodeh + 2*nodeSelectionBorderMaxSize]
 
@@ -228,7 +304,7 @@ main = () ->
   #
   #     # msg = "OVER NODE (#{i}, #{j})!"
   #     n.addEventListener 'mouseover', (e) ->
-  #       console.log e.component.xxx
+  #       console.log e.symbol.xxx
 
   # for i in [0..100]
   #   localComponent = new Component (selectionShape())
@@ -236,9 +312,9 @@ main = () ->
   #   localComponent1 = scene.add localComponent
   #   localComponent1.position.xy = [i*100,0]
 
-
-  selector = new BoxSelector scene, selector
-  selector.widget.variables.zIndex = 10
+  #
+  # selector = new BoxSelector scene, selector
+  # selector.widget.variables.zIndex = 10
 
 
 

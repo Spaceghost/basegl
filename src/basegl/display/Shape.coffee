@@ -118,17 +118,18 @@ export class Canvas
     glsl = "sdf_quadraticCurve(p, vec2(#{g_cx},#{g_cy}), vec2(#{g_x},#{g_y}));"
     @defShape glsl, bb
 
-  union:         (s1,s2) -> @defShape "sdf_union(#{s1.name},#{s2.name})"      , "bbox_union(#{s1.bbName},#{s2.bbName})"    , "color_mergeLCH(#{s1.name},#{s2.name},#{s1.cdName},#{s2.cdName})", @mergeIDLayers(s1,s2)
-  difference:    (s1,s2) -> @defShape "sdf_difference(#{s1.name},#{s2.name})" , "bbox_union(#{s1.bbName},#{s2.bbName})"    , s1.cdName, @diffIDLayers(s1,s2)
-  grow:          (s1,r)  -> @defShape "sdf_grow(#{GLSL.toCode r},#{s1.name})" , "bbox_grow(#{GLSL.toCode r},#{s1.bbName})" , s1.cdName
-  outside:       (s1)    -> @defShape "sdf_removeInside(#{s1.name})"          , s1.bbName                                  , s1.cdName
-  inside:        (s1)    -> @defShape "sdf_removeOutside(#{s1.name})"         , s1.bbName                                  , s1.cdName, @keepIDLayer(s1)
-  blur:          (s1,r)  -> @defShape "sdf_blur(#{s1.name},#{GLSL.toCode r})" , "bbox_grow(#{GLSL.toCode r},#{s1.bbName})" , s1.cdName
-  move:          (x,y)   -> @addCodeLine "p = sdf_translate(p, vec2(#{GLSL.toCode x}, #{GLSL.toCode y}));"
-  moveTo:        (x,y)   -> @addCodeLine "p = vec2(#{GLSL.toCode x}, #{GLSL.toCode y});"
-  rotate:        (a)     -> @addCodeLine "p = sdf_rotate(p, #{GLSL.toCode a});"
-  moveTo:        (x,y)   -> @addCodeLine "p = vec2(#{GLSL.toCode x}, #{GLSL.toCode y});"
-  fill:          (s1,c)  ->
+  union:         (s1,s2)   -> @defShape "sdf_union(#{s1.name},#{s2.name})"      , "bbox_union(#{s1.bbName},#{s2.bbName})"    , "color_mergeLCH(#{s1.name},#{s2.name},#{s1.cdName},#{s2.cdName})", @mergeIDLayers(s1,s2)
+  unionRound:    (r,s1,s2) -> @defShape "sdf_unionRound(#{s1.name},#{s2.name},#{GLSL.toCode r})"      , "bbox_union(#{s1.bbName},#{s2.bbName})"    , "color_mergeLCH(#{s1.name},#{s2.name},#{s1.cdName},#{s2.cdName})", @mergeIDLayers(s1,s2)
+  difference:    (s1,s2)   -> @defShape "sdf_difference(#{s1.name},#{s2.name})" , "bbox_union(#{s1.bbName},#{s2.bbName})"    , s1.cdName, @diffIDLayers(s1,s2)
+  grow:          (s1,r)    -> @defShape "sdf_grow(#{GLSL.toCode r},#{s1.name})" , "bbox_grow(#{GLSL.toCode r},#{s1.bbName})" , s1.cdName
+  outside:       (s1)      -> @defShape "sdf_removeInside(#{s1.name})"          , s1.bbName                                  , s1.cdName
+  inside:        (s1)      -> @defShape "sdf_removeOutside(#{s1.name})"         , s1.bbName                                  , s1.cdName, @keepIDLayer(s1)
+  blur:          (s1,r)    -> @defShape "sdf_blur(#{s1.name},#{GLSL.toCode r})" , "bbox_grow(#{GLSL.toCode r},#{s1.bbName})" , s1.cdName
+  move:          (x,y)     -> @addCodeLine "p = sdf_translate(p, vec2(#{GLSL.toCode x}, #{GLSL.toCode y}));"
+  moveTo:        (x,y)     -> @addCodeLine "p = vec2(#{GLSL.toCode x}, #{GLSL.toCode y});"
+  rotate:        (a)       -> @addCodeLine "p = sdf_rotate(p, #{GLSL.toCode a});"
+  moveTo:        (x,y)     -> @addCodeLine "p = vec2(#{GLSL.toCode x}, #{GLSL.toCode y});"
+  fill:          (s1,c)    ->
     c = c.toRGB()
     if c.a == undefined
       c = c.copy()
@@ -272,6 +273,15 @@ export class Union extends Shape
     rs = r.renderShapes @shapes...
     fold (r.canvas.union.bind r.canvas), rs
 Shape::union = protoBindCons Union
+export union = consAlias Union
+
+export class UnionRound extends Shape
+  constructor: (@radius, @shapes...) -> super(); @addChildren @shapes...
+  renderGLSL: (r) ->
+    rs = r.renderShapes @shapes...
+    fold ((a,b) => (r.canvas.unionRound.bind r.canvas) @radius,a,b), rs
+export unionRound = consAlias UnionRound
+
 
 export class Difference extends Shape
   constructor: (@a, @b) -> super(); @addChildren @a, @b
@@ -292,6 +302,7 @@ export class Grow extends Shape
     a = r.renderShape @a
     r.canvas.grow a, @radius
 Shape::grow = protoBindCons Grow
+Shape::shrink = (radius) -> @grow(-radius)
 
 export class Inside extends Shape
   constructor: (@a) -> super(); @addChildren @a

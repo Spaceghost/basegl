@@ -2,7 +2,7 @@ require("modulereg").registerModule __filename, (require __filename)
 
 
 import {DisplayObject, POINTER_EVENTS}    from 'basegl/display/DisplayObject'
-import {ComponentGeometry, ComponentFamily, DRAW_BUFFER}    from 'basegl/display/Component'
+import {SymbolGeometry, SymbolFamily, DRAW_BUFFER}    from 'basegl/display/Symbol'
 import {Camera, GLCamera} from 'basegl/navigation/Camera'
 import {animationManager} from 'basegl/animation/Manager'
 import {world}            from 'basegl/display/World'
@@ -28,20 +28,20 @@ unsafeWithReparented = (a, newParent, f) ->
   out
 
 
-export class ComponentTargetPath
-  constructor: (@componentFamilyID=0, @componentID=0, @shapeID=0) ->
-  compare: (t) -> (@compareComponent t) && (@shapeID == t.shapeID)
-  compareComponent: (t) -> (@componentFamilyID == t.componentFamilyID) && (@componentID == t.componentID)
+export class SymbolTargetPath
+  constructor: (@symbolFamilyID=0, @symbolID=0, @shapeID=0) ->
+  compare: (t) -> (@compareSymbol t) && (@shapeID == t.shapeID)
+  compareSymbol: (t) -> (@symbolFamilyID == t.symbolFamilyID) && (@symbolID == t.symbolID)
 
-export class ComponentTarget
-  constructor: (@path=new ComponentTargetPath, @component=null, @shapeDef=null, @element=null) ->
+export class SymbolTarget
+  constructor: (@path=new SymbolTargetPath, @symbol=null, @shapeDef=null, @element=null) ->
 
   runInContext: (f) ->
-    if @shapeDef? then unsafeWithReparented @shapeDef, @component, f
+    if @shapeDef? then unsafeWithReparented @shapeDef, @symbol, f
     else f()
 
   dispatchEvent: (e) ->
-    setObjectProperty e, 'component', @component
+    setObjectProperty e, 'symbol', @symbol
     setObjectProperty e, 'shapeDef' , @shapeDef
     @runInContext => @element.dispatchEvent e
 
@@ -80,7 +80,7 @@ export class MaterialStore
 
 
 
-
+aaaa = Date.now()
 
 export class OffscreenScene extends Composition
   @mixin eventDispatcher: EventDispatcher
@@ -105,6 +105,7 @@ export class OffscreenScene extends Composition
     @_initRenderer()
     @viewTrough @camera
     world.registerOffscreenScene @
+    @_beginTime = Date.now()
     # if opts.start then animationManager.addEveryDrawAnimation @onEveryFrame
 
   _initRenderer: () ->
@@ -128,14 +129,15 @@ export class OffscreenScene extends Composition
   visibleHeight: () -> @height * @camera.position.z
 
   update: () -> @_stats.measure () =>
-    @_model.materials.uniforms.zoom = @camera.position.z
+    @_model.materials.uniforms.zoom       = @camera.position.z
+    @_model.materials.uniforms.time       = Date.now() - @_beginTime
     @_model.materials.uniforms.drawBuffer = DRAW_BUFFER.NORMAL
     @_renderer.clear()
     @_renderer.render @_model._glScene, @_glCamera
     @_glCamera.update()
 
   add: (comp) ->
-    def = @model.registerComponent comp
+    def = @model.registerSymbol comp
     def.newInstance()
 
   onEveryFrame: () => @update()
@@ -174,7 +176,7 @@ export class Scene extends Composition
 
   _initMouseSupport: () ->
     @_mouseIDBuffer      = new Float32Array 4
-    @_lastTarget         = new ComponentTarget
+    @_lastTarget         = new SymbolTarget
     @_lastTarget.element = @
     @screenMouse         = new THREE.Vector2
     @mouse               = new THREE.Vector2
@@ -232,30 +234,30 @@ export class Scene extends Composition
         request @_idBuffer
       @_idScreenshotRequests = []
 
-    componentFamilyID = @_mouseIDBuffer[0]
-    componentID       = @_mouseIDBuffer[1]
+    symbolFamilyID = @_mouseIDBuffer[0]
+    symbolID       = @_mouseIDBuffer[1]
     shapeID           = @_mouseIDBuffer[2]
 
-    ## Finding current ComponentTarget
-    targetPath = new ComponentTargetPath componentFamilyID, componentID, shapeID
+    ## Finding current SymbolTarget
+    targetPath = new SymbolTargetPath symbolFamilyID, symbolID, shapeID
     if not (@_lastTarget.path.compare targetPath)
       target = null
       if (shapeID == 0)
-        target = new ComponentTarget targetPath
+        target = new SymbolTarget targetPath
         target.element = @
       else
-        family         = @_model.lookupComponentFamily componentFamilyID
+        family         = @_model.lookupSymbolFamily symbolFamilyID
         if not family then return # when resizing screen sometimes sampled pixels have wrong value!
-        component      = family.lookupComponent componentID
+        symbol      = family.lookupSymbol symbolID
         shapeDef       = family.definition.shape
-        shapeDefTarget = component.lookupShapeDef shapeID
-        target         = new ComponentTarget targetPath, component, shapeDef, shapeDefTarget
+        shapeDefTarget = symbol.lookupShapeDef shapeID
+        target         = new SymbolTarget targetPath, symbol, shapeDef, shapeDefTarget
         target.element = target.discoverPointerEventTarget()
 
       ## Dispatching events
       targetChanged    = target.element != @_lastTarget.element
-      componentChanged = (not (target.path.compareComponent @_lastTarget.path)) && (target.element.type == Shape)
-      if targetChanged || componentChanged
+      symbolChanged = (not (target.path.compareSymbol @_lastTarget.path)) && (target.element.type == Shape)
+      if targetChanged || symbolChanged
         overEvent  = new MouseEvent 'mouseover' , @_mouseBaseEvent
         outEvent   = new MouseEvent 'mouseout'  , @_mouseBaseEvent
         enterEvent = disableBubbling (new MouseEvent 'mouseenter', @_mouseBaseEvent)
@@ -285,21 +287,21 @@ export class SceneModel extends DisplayObject
     super()
     @_glScene               = new THREE.Scene
     @materials              = new MaterialStore
-    @_componentFamilyDefMap = new Map
-    @_componentFamilyIDMap  = new Map
+    @_symbolFamilyDefMap = new Map
+    @_symbolFamilyIDMap  = new Map
     @variables              = @materials.uniforms
-    @_componentFamilyIDPool = new IdxPool 1
+    @_symbolFamilyIDPool = new IdxPool 1
 
-  registerComponent: (comp) ->
-    family = @_componentFamilyDefMap.get comp
+  registerSymbol: (comp) ->
+    family = @_symbolFamilyDefMap.get comp
     if not family?
-      id       = @_componentFamilyIDPool.reserve()
-      geometry = new ComponentGeometry comp._localVariables
-      family   = new ComponentFamily id, comp, geometry
-      @_componentFamilyDefMap.set comp, family
-      @_componentFamilyIDMap.set  id  , family
+      id       = @_symbolFamilyIDPool.reserve()
+      geometry = new SymbolGeometry comp._localVariables
+      family   = new SymbolFamily id, comp, geometry
+      @_symbolFamilyDefMap.set comp, family
+      @_symbolFamilyIDMap.set  id  , family
       @materials.add comp.material
       @_glScene.add  family._mesh
     family
 
-  lookupComponentFamily: (id) -> @_componentFamilyIDMap.get id
+  lookupSymbolFamily: (id) -> @_symbolFamilyIDMap.get id
