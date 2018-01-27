@@ -1,20 +1,22 @@
 {
   "name": "basegl",
-  "version": "0.1.0",
+  "version": "0.1.8",
   "description": "A blazing fast WebGL drawing API. Currently supports two-dimensional operations, including SDF shapes, animation, mouse handling and SDF text (both online atlas baking as well as rendering).",
-  "homepage": "https://github.com/wdanilo/basegl#readme",
+  "homepage": "https://luna.github.io/basegl/",
   "author": "Wojciech Danilo <wojciech.danilo@gmail.com>",
   "license": "MIT",
-  "main": "./dist/js/basegl.js",
+  "main": "main.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "webpack",
-    "watch": "webpack --progress --watch",
-    "start": "webpack-dev-server --open"
+    "build": "npx coffee --compile --output lib/ src/ && cp package.json lib/package.json",
+    "watch": "npx coffee --watch --compile --output lib/ src/",
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/wdanilo/basegl.git"
+    "url": "git+https://github.com/luna/basegl.git"
+  },
+  "directories": {
+    "lib": "lib"
   },
   "keywords": [
     "webgl",
@@ -22,7 +24,7 @@
     "graphics"
   ],
   "bugs": {
-    "url": "https://github.com/wdanilo/basegl/issues"
+    "url": "https://github.com/luna/basegl/issues"
   },
   "devDependencies": {
     "coffee-loader": "^0.9.0",
@@ -31,7 +33,6 @@
     "webpack": "^3.9.1"
   },
   "dependencies": {
-    "animejs": "^2.2.0",
     "bluebird": "^3.5.1",
     "stats.js": "^0.17.0",
     "three": "^0.85.2",
@@ -44,6 +45,11 @@
     "escodegen": "^1.9.0",
     "glsl-gamma": "^2.0.0",
     "opentype.js": "^0.7.3",
-    "paper": "^0.11.5"
+    "gulp": "next",
+    "gulp-coffee": "^3.0.2",
+    "coffeescript": "^2.1.1",
+    "gulp-transform": "^3.0.5",
+    "gulp-rename": "^1.2.2",
+    "gulp-plumber": "^1.2.0"
   }
 }
