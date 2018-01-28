@@ -5,25 +5,32 @@ rename    = require 'gulp-rename'
 plumber   = require 'gulp-plumber'
 execSync  = require('child_process').execSync
 
+
+cwd    = '..'
+path   = (s) -> "#{cwd}/#{s}"
+dist   = path 'dist'
+pkgCfg = path 'package.json'
+
+
 gulp.task 'transpile_coffee', (done) ->
-  gulp.src './src/**/*.coffee', {sourcemaps: true}
+  gulp.src (path 'src/**/*.coffee'), {sourcemaps: true}
     .pipe(plumber())
     .pipe coffee {bare: true}
-    .pipe gulp.dest './lib'
+    .pipe gulp.dest dist
   done()
 
 
 gulp.task 'transpile_glsl', (done) ->
-  gulp.src './src/**/*.glsl'
+  gulp.src (path 'src/**/*.glsl')
     .pipe transform 'utf8', (str) => "var code = `\n#{str.replace(/`/g,"'")}`;\nexport default code;"
     .pipe rename (path) => path.extname = ".js"
-    .pipe gulp.dest('./lib')
+    .pipe gulp.dest dist
   done()
 
 
 gulp.task 'copy_package_config', (done) ->
-  gulp.src './package.json'
-    .pipe gulp.dest './lib'
+  gulp.src pkgCfg
+    .pipe gulp.dest dist
   done()
 
 
@@ -42,21 +49,21 @@ incVersionMinor = incVersionWith (version) => version[1] += 1; version[2] = 0
 incVersionMajor = incVersionWith (version) => version[0] += 1; version[1] = 0; version[2] = 0
 
 gulp.task 'incVersionDev', (done) ->
-  gulp.src './package.json'
+  gulp.src pkgCfg
     .pipe transform 'utf8', incVersionDev
-    .pipe gulp.dest('.')
+    .pipe gulp.dest(cwd)
   done()
 
 gulp.task 'incVersionMinor', (done) ->
-  gulp.src './package.json'
+  gulp.src pkgCfg
     .pipe transform 'utf8', incVersionMinor
-    .pipe gulp.dest('.')
+    .pipe gulp.dest(cwd)
   done()
 
 gulp.task 'incVersionMajor', (done) ->
-  gulp.src './package.json'
+  gulp.src pkgCfg
     .pipe transform 'utf8', incVersionMajor
-    .pipe gulp.dest('.')
+    .pipe gulp.dest(cwd)
   done()
 
 gulp.task 'build'   , gulp.series 'copy_package_config', 'transpile_coffee', 'transpile_glsl'
@@ -65,20 +72,20 @@ gulp.task 'publish' , gulp.series 'build', 'incVersionDev', 'copy_package_config
   done()
 
 gulp.task 'publish:minor', gulp.series 'build', 'incVersionMinor', 'copy_package_config', (done) ->
-  execSync 'cd lib && npm publish', {stdio:'inherit'}
+  execSync "cd #{dist} && npm publish", {stdio:'inherit'}
   done()
 
 gulp.task 'publish:major', gulp.series 'build', 'incVersionMajor', 'copy_package_config', (done) ->
-  execSync 'cd lib && npm publish', {stdio:'inherit'}
+  execSync "cd #{dist} && npm publish", {stdio:'inherit'}
   done()
 
 
 gulp.task 'watch', gulp.series 'build', (done) ->
-  gulp.watch './src/**/*', gulp.series('build')
+  gulp.watch (path 'src/**/*'), gulp.series('build')
 
 
 gulp.task 'sandboxServer', (done) ->
-  execSync 'cd examples && npx webpack-dev-server --open', {stdio:'inherit'}
+  execSync "cd #{path 'examples'} && npx webpack-dev-server --open --env=sandbox", {stdio:'inherit'}
   done()
 
 

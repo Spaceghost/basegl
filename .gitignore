@@ -1,6 +1,3 @@
 #JS
 node_modules/
 dist/
-
-#HS
-.stack-work/

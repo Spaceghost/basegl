@@ -7,9 +7,9 @@
   "license": "MIT",
   "main": "main.js",
   "scripts": {
-    "build": "npx coffee --compile --output lib/ src/ && cp package.json lib/package.json",
-    "watch": "npx coffee --watch --compile --output lib/ src/",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build":   "npx gulp --gulpfile build/gulpfile.coffee build",
+    "watch":   "npx gulp --gulpfile build/gulpfile.coffee watch",
+    "sandbox": "npx gulp --gulpfile build/gulpfile.coffee sandbox"
   },
   "repository": {
     "type": "git",

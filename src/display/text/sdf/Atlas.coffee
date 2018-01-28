@@ -10,8 +10,6 @@ import {BinPack}     from 'basegl/display/text/sdf/BinPack'
 import {Composition} from 'basegl/object/Property'
 import {typedValue}  from 'basegl/display/Symbol'
 
-
-
 letterShape = new Shape.RawShader
   fragment: '''
 
