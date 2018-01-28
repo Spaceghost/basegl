@@ -1,15 +1,19 @@
 {
   "name": "basegl",
-  "version": "0.1.8",
+  "version": "0.0.14",
   "description": "A blazing fast WebGL drawing API. Currently supports two-dimensional operations, including SDF shapes, animation, mouse handling and SDF text (both online atlas baking as well as rendering).",
   "homepage": "https://luna.github.io/basegl/",
   "author": "Wojciech Danilo <wojciech.danilo@gmail.com>",
   "license": "MIT",
   "main": "main.js",
   "scripts": {
-    "build":   "npx gulp --gulpfile build/gulpfile.coffee build",
-    "watch":   "npx gulp --gulpfile build/gulpfile.coffee watch",
-    "sandbox": "npx gulp --gulpfile build/gulpfile.coffee sandbox"
+    "build": "npx gulp --gulpfile build/gulpfile.coffee build",
+    "watch": "npx gulp --gulpfile build/gulpfile.coffee watch",
+    "sandbox": "npx gulp --gulpfile build/gulpfile.coffee sandbox",
+    "publish": "npx gulp --gulpfile build/gulpfile.coffee publish",
+    "publish:dev": "npx gulp --gulpfile build/gulpfile.coffee publish:dev",
+    "publish:minor": "npx gulp --gulpfile build/gulpfile.coffee publish:minor",
+    "publish:major": "npx gulp --gulpfile build/gulpfile.coffee publish:major"
   },
   "repository": {
     "type": "git",
@@ -50,6 +54,7 @@
     "coffeescript": "^2.1.1",
     "gulp-transform": "^3.0.5",
     "gulp-rename": "^1.2.2",
-    "gulp-plumber": "^1.2.0"
+    "gulp-plumber": "^1.2.0",
+    "gulp-debug": "^3.2.0"
   }
 }
