@@ -33,13 +33,6 @@ var jsnextRules = {
 
 module.exports = function(source) {
   this.value = source;
-
-  // var json = JSON.stringify(source)
-  //   .replace(/\u2028/g, '\\u2028')
-  //   .replace(/\u2029/g, '\\u2029');
-
-  out = jsnext.preprocessModule('unknown.js', jsnextRules, source);
-  // console.log(out);
-  // console.log(source);
+  out = jsnext.preprocessModule('unknown.js', jsnextRules, source, {library: 'basegl', call: 'expr', defaultExts: ['basegl.math']});
   return out;
 }

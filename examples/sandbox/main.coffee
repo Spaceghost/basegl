@@ -18,8 +18,6 @@ import * as Font from 'basegl/display/text/sdf/Atlas'
 
 import {animationManager} from 'basegl/animation/Manager'
 
-import * as jsnext from '@luna-lang/jsnext'
-
 
 
 #######################
@@ -43,7 +41,7 @@ nodeBg         = bg.mix white, 0.04
 
 
 
-nodeShape = jsnext.apply 'basegl.math', do ->
+nodeShape = basegl.expr ->
   border       = 0
   bodyWidth    = 300
   bodyHeight   = 600
@@ -126,7 +124,7 @@ makeSelectable = (a) ->
 ### Testing ###
 
 
-myShape = jsnext.apply 'basegl.math', do ->
+myShape = basegl.expr ->
   base    = circle('myVar')
   base.fill(Color.rgb [0,0,0,0.7]).move(200,200)
 

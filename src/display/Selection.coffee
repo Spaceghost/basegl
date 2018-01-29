@@ -156,7 +156,7 @@ export class QuadTree
 ### BoxSelector ###
 ###################
 
-export boxSelectorShape = jsnext.apply 'basegl.math', do ->
+export boxSelectorShape = jsnext.apply 'basegl.math', ->
   cd   = selectionColor.copy()
   cd.a = 0.3
   rect('dim.x', 'dim.y').alignedTL.fill(cd)

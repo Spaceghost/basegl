@@ -8,34 +8,11 @@ path      = require 'path'
 execSync  = require('child_process').execSync
 exec      = require('child_process').exec
 
-jsnext    = require '@luna-lang/jsnext'
 
-gulp.task 'test', ->
-  console.log '!!!'
-  console.log jsnext
-
-
-jsnextRules =
-  'basegl.math': [ jsnext.overloadOperators((n) => 'op'+n)
-                 , jsnext.replaceQualifiedAccessors('Math', 'basegl.Math')
-                 ]
-
-#
-# out = jsnext.preprocessModule 'index.js', jsnextRules, '''
-# import * as pkg1   from 'pkg1'
-# import * as jsnext from 'jsnext'
-#
-# foo = jsnext.apply(['basegl.math'], (function() {
-#   if(t){a+Math.sin(b)};
-# })());
-#
-# bar = jsnext.apply([], (function() {
-#   if(t){a+Math.sin(b)};
-# })());
-#
-# '''
-
-
+# jsnextRules =
+#   'basegl.math': [ jsnext.overloadOperators((n) => 'op'+n)
+#                  , jsnext.replaceQualifiedAccessors('Math', 'basegl.Math')
+#                  ]
 
 
 ### Globals ###
@@ -70,12 +47,16 @@ watchableTask = (name, glob, fn) ->
 
 watchableTask 'coffee', '**/*.coffee', (t) =>
   t .pipe coffee {bare: true}
-    .pipe transform 'utf8', (str) => jsnext.preprocessModule 'unknown.js', jsnextRules, str
+    # .pipe transform 'utf8', (str) => jsnext.preprocessModule 'unknown.js', jsnextRules, str
 watchableTask 'glsl'  , '**/*.glsl'  , (t) =>
   t .pipe transform 'utf8', (str) => "var code = `\n#{str.replace(/`/g,"'")}`;\nexport default code;"
     .pipe rename (path) => path.extname = ".js"
 
 gulp.task 'watch', (gulp.parallel watchables...)
+
+
+gulp.task 'watch', (gulp.parallel watchables...)
+
 
 
 

@@ -1,6 +1,6 @@
 {
   "name": "basegl",
-  "version": "0.0.14",
+  "version": "0.0.15",
   "description": "A blazing fast WebGL drawing API. Currently supports two-dimensional operations, including SDF shapes, animation, mouse handling and SDF text (both online atlas baking as well as rendering).",
   "homepage": "https://luna.github.io/basegl/",
   "author": "Wojciech Danilo <wojciech.danilo@gmail.com>",
@@ -35,7 +35,8 @@
     "gl-matrix": "^2.4.0",
     "webpack": "^3.9.1",
     "webpack-dev-server": "^2.9.7",
-    "coffee-loader": "^0.9.0"
+    "coffee-loader": "^0.9.0",
+    "@luna-lang/jsnext": "^0.0.10"
   },
   "dependencies": {
     "bluebird": "^3.5.1",
@@ -55,7 +56,6 @@
     "gulp-transform": "^3.0.5",
     "gulp-rename": "^1.2.2",
     "gulp-plumber": "^1.2.0",
-    "gulp-debug": "^3.2.0",
-    "@luna-lang/jsnext": "^0.0.7"
+    "gulp-debug": "^3.2.0"
   }
 }
