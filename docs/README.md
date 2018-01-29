@@ -96,7 +96,7 @@ myShape = basegl.expr ->
   circle(100) - circle(80)
 ```
 
-That's it! After running the code via the pre-processor, you would get code equiivalent to:
+That's it! After running the code via the pre-processor, you would get code equivalent to:
 
 ```
 myShape = basegl.Math.subtract(circle(100), circle(80))
