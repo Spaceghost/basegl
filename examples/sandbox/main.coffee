@@ -9,9 +9,6 @@ import {world}      from 'basegl/display/World'
 import * as basegl from 'basegl'
 import * as Shape     from 'basegl/display/Shape'
 
-M = require 'basegl/math/Common'
-
-
 import * as Animation from 'basegl/animation/Animation'
 import * as Easing    from 'basegl/animation/Easing'
 
@@ -21,9 +18,9 @@ import * as Font from 'basegl/display/text/sdf/Atlas'
 
 import {animationManager} from 'basegl/animation/Manager'
 
+import * as jsnext from '@luna-lang/jsnext'
 
-# animationManager.fpsLimit = 60
-# animationManager.maxMissingFrames = 1
+
 
 #######################
 ### Node Definition ###
@@ -43,7 +40,11 @@ bg             = (Color.hsl [40,0.08,0.09]).toRGB()
 selectionColor = bg.mix (Color.hsl [50, 1, 0.6]), 0.8
 nodeBg         = bg.mix white, 0.04
 
-normalNode = eval basegl.localExpr (border=0) ->
+
+
+
+nodeShape = jsnext.apply 'basegl.math', do ->
+  border       = 0
   bodyWidth    = 300
   bodyHeight   = 600
   slope        = 20
@@ -51,11 +52,11 @@ normalNode = eval basegl.localExpr (border=0) ->
   r1    = nodeRadius + border
   r2    = nodeRadius + headerOffset + slope - border
   dy    = slope
-  dx    = M.sqrt ((r1+r2)*(r1+r2) - dy*dy)
-  angle = M.atan(dy/dx)
+  dx    = Math.sqrt ((r1+r2)*(r1+r2) - dy*dy)
+  angle = Math.atan(dy/dx)
 
   maskPlane     = glslShape("-sdf_halfplane(p, vec2(1.0,0.0));").moveX(dx)
-  maskRect      = rect(r1+r2, r2 * M.cos(-angle)).alignedTL.rotate(-angle)
+  maskRect      = rect(r1+r2, r2 * Math.cos(-angle)).alignedTL.rotate(-angle)
   mask          = (maskRect - maskPlane).inside
   headerShape   = (circle(r1) + mask) - circle(r2).move(dx,dy)
   headerFill    = rect(r1*2, nodeRadius + headerOffset + 10).alignedTL.moveX(-r1)
@@ -66,7 +67,7 @@ normalNode = eval basegl.localExpr (border=0) ->
   node          = node.fill nodeBg
 
   eye           = 'scaledEye.z'
-  border        = node.grow(M.pow(M.clamp(eye*20.0, 0.0, 400.0),0.7)).grow(-1)
+  border        = node.grow(Math.pow(Math.clamp(eye*20.0, 0.0, 400.0),0.7)).grow(-1)
 
   sc            = selectionColor.copy()
   sc.a = 'selected'
@@ -74,7 +75,6 @@ normalNode = eval basegl.localExpr (border=0) ->
 
   border + node
 
-nodeShape = normalNode()
 
 
 
@@ -126,16 +126,10 @@ makeSelectable = (a) ->
 ### Testing ###
 
 
-myShapeF = eval basegl.localExpr () ->
+myShape = jsnext.apply 'basegl.math', do ->
   base    = circle('myVar')
   base.fill(Color.rgb [0,0,0,0.7]).move(200,200)
-#
-# myShapeF = eval basegl.localExpr () ->
-#   base = Shape.unionRound 16, circle(100), circle(100).moveX(160), circle(100).move(80,80), circle(100).move(80,-80)
-#   border = base - base.shrink(16)
-#   border.fill(Color.rgb [0,0,0,1]).move(170,250)
 
-myShape = myShapeF()
 
 
 

@@ -1,17 +1,8 @@
 import {parensed}      from 'basegl/lib/text/CodeGen'
 import * as Reflect    from 'basegl/object/Reflect'
-import * as Overloaded from 'basegl/lib/Overloaded'
 import * as Property   from 'basegl/object/Property'
 import * as GLSL       from 'basegl/display/target/WebGL'
 import * as TypeClass  from 'basegl/lib/TypeClass'
-
-
-####################
-### Syntax modes ###
-####################
-
-export expr      = (f) -> Overloaded.overload     Overloaded.binaryOperatorMap, f
-export localExpr = (f) -> Overloaded.overloadCode Overloaded.binaryOperatorMap, f
 
 
 

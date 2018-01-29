@@ -1,8 +1,7 @@
-import {localExpr} from 'basegl/math/Common'
 import {Symbol}    from 'basegl/display/Symbol'
 import {rect}      from 'basegl/display/Shape'
 import * as Color  from 'basegl/display/Color'
-M = require 'basegl/math/Common'
+import * as jsnext from '@luna-lang/jsnext'
 
 
 ## FIXME: refactor
@@ -157,7 +156,7 @@ export class QuadTree
 ### BoxSelector ###
 ###################
 
-export boxSelectorShape = eval localExpr () ->
+export boxSelectorShape = jsnext.apply 'basegl.math', do ->
   cd   = selectionColor.copy()
   cd.a = 0.3
   rect('dim.x', 'dim.y').alignedTL.fill(cd)
@@ -165,7 +164,7 @@ export boxSelectorShape = eval localExpr () ->
 
 export class BoxSelector
   constructor: (@scene, @callback=()->, @mode='quadtree', @benchmark=false) ->
-    widgetDef = new Component (boxSelectorShape())
+    widgetDef = new Component boxSelectorShape
     widgetDef.bbox.xy = [0,0]
     widgetDef.variables.alpha = 1
     @widget = @scene.add widgetDef

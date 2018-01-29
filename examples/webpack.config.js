@@ -50,7 +50,7 @@ module.exports =
   , module:
     { strictExportPresence: true
     , rules:
-      [ { use: 'coffee-loader'  , test: /\.(coffee)$/                                   }
+      [ { use: [{loader: path.resolve('./basegl-loader.js')}, 'coffee-loader']  , test: /\.(coffee)$/                                   }
       , { use: 'raw-loader'     , test: /\.(glsl|vert|frag)$/ , exclude: /node_modules/ }
       , { use: 'glslify-loader' , test: /\.(glsl|vert|frag)$/ , exclude: /node_modules/ }
       ]
