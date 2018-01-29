@@ -199,16 +199,14 @@ You can access the variables by using `Shape.variables` dictionary, for example,
 
 ```coffeescript
 import * as Symbol from 'basegl/display/Symbol'
-import * as M      from 'basegl/math/Common'
 
 myShape = basegl.expr ->
   time    = Symbol.variables.time
-  base    = circle(M.sin(time/100)*20+100) + circle(M.sin(time/170)*14 + 80).moveY(100) + circle(M.sin(time/150)*10 + 60).moveY(180)
+  base    = circle(Math.sin(time/100)*20+100) + circle(Math.sin(time/170)*14 + 80).moveY(100) + circle(Math.sin(time/150)*10 + 60).moveY(180)
   contour = base.grow(10) - base
   contour.fill(Color.rgb [0,0,0,0.7]).move(200,200)
 ```
 
-The `M` module is just like JavaScript `Math` module but works both in JavaScript as well as on your GPU.
 
 
 ### Creating custom variables
