@@ -6,7 +6,7 @@ import * as OpenType from 'opentype.js'
 import * as Promise  from 'bluebird'
 
 import {Symbol, group}   from 'basegl/display/Symbol'
-import {BinPack}     from 'basegl/display/text/sdf/BinPack'
+import {BinPack}     from 'basegl/display/texture/BinPack'
 import {Composition} from 'basegl/object/Property'
 import {typedValue}  from 'basegl/display/Symbol'
 

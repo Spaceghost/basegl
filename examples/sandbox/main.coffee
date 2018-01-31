@@ -12,8 +12,8 @@ import * as Shape     from 'basegl/display/Shape'
 import * as Animation from 'basegl/animation/Animation'
 import * as Easing    from 'basegl/animation/Easing'
 
-import {BoxSelector} from 'basegl/display/Selection'
-import * as Font from 'basegl/display/text/sdf/Atlas'
+# import {BoxSelector} from 'basegl/display/Selection'
+import * as Font from 'basegl/display/text/Font'
 
 
 import {animationManager} from 'basegl/animation/Manager'
@@ -37,9 +37,6 @@ white          = Color.rgb [1,1,1]
 bg             = (Color.hsl [40,0.08,0.09]).toRGB()
 selectionColor = bg.mix (Color.hsl [50, 1, 0.6]), 0.8
 nodeBg         = bg.mix white, 0.04
-
-
-
 
 nodeShape = basegl.expr ->
   border       = 0
@@ -72,8 +69,6 @@ nodeShape = basegl.expr ->
   border        = border.fill sc
 
   border + node
-
-
 
 
 

@@ -200,8 +200,8 @@ export class Scene extends Composition
       if not trigger then return
       if (event.key >= '0') && (event.key <= '9')
         @_model.materials.uniforms.displayMode = parseInt(event.key)
-      else if (event.key == '`')
-        Debug.getInspector().toggle()
+    #   else if (event.key == '`')
+    #     Debug.getInspector().toggle()
 
 
   ### API ###

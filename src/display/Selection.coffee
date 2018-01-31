@@ -2,7 +2,7 @@ import {Symbol}    from 'basegl/display/Symbol'
 import {rect}      from 'basegl/display/Shape'
 import * as Color  from 'basegl/display/Color'
 import * as jsnext from '@luna-lang/jsnext'
-
+import * as basegl from 'basegl'
 
 ## FIXME: refactor
 bg        = (Color.hsl [40,0.08,0.09]).toRGB()
@@ -156,7 +156,7 @@ export class QuadTree
 ### BoxSelector ###
 ###################
 
-export boxSelectorShape = jsnext.apply 'basegl.math', ->
+export boxSelectorShape = basegl.expr ->
   cd   = selectionColor.copy()
   cd.a = 0.3
   rect('dim.x', 'dim.y').alignedTL.fill(cd)
