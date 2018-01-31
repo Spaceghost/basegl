@@ -77,8 +77,6 @@ export class MaterialStore
 
 
 
-aaaa = Date.now()
-
 export class OffscreenScene extends Composition
   @mixin eventDispatcher: EventDispatcher
 
@@ -92,7 +90,6 @@ export class OffscreenScene extends Composition
   @properties
     _canvas : null
     _stats  : null
-
 
   init: (cfg) ->
     @mixins.eventDispatcher.constructor()

@@ -207,13 +207,13 @@ export class GlyphShape
 export class GlyphInfo
   constructor: (@shape, @loc) ->
 
-export class Atlas extends Composition
+class Atlas extends Composition
   @parameters
-    # _scene      : null # FIXME: remove
     _fontFamily : null
     _size       : 2048
     _glyphSize  : 64
     _spread     : 16
+    _preload    : [32..126]
 
   @properties
     _scene     : null
@@ -234,6 +234,7 @@ export class Atlas extends Composition
 
     @ready = loadFont(@fontFamily).then (font) =>
       @_font = font
+      @loadGlyphs @preload
       @
 
     @_letterDef = new Symbol letterShape
@@ -244,6 +245,7 @@ export class Atlas extends Composition
     @_letterDef.globalVariables.glyphsTextureSize = @size
 
     @_glyphSymbol = new Symbol glyphShape
+
 
 
   getInfo: (glyph) ->
@@ -346,19 +348,19 @@ export class Atlas extends Composition
     txt = group letters
     txt
 
+export atlas = Property.consAlias Atlas
 
 
-
-export class FontManager
-  constructor: (@_scene) -> #FIXME: scene should be created here
+class Manager
+  constructor: () ->
     @atlasses = new IDMap
 
   load: (cfg) ->
-    cfg.scene = @_scene
-    atlas = new Atlas cfg
-    @atlasses.insert atlas
-    atlas
+    a = atlas cfg
+    @atlasses.insert a
+    a.ready
 
+export manager = Property.consAlias Manager
 
 
 

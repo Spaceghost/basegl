@@ -175,7 +175,17 @@ defineWith = (f) => (obj, cfg) =>
     obj[n] = f v, n2
   obj
 
+normalizeName = (n) =>
+  if      n.startsWith '__' then n.slice 2
+  else if n.startsWith '_'  then n.slice 1
+  else    n
+
 configureUsing = (f) => (obj, cfg, cfgDef) =>
+  if typeof cfg == 'string' || typeof cfg == 'number'
+    firstVal      = cfg
+    firstKey      = normalizeName Object.keys(cfgDef)[0]
+    cfg           = {}
+    cfg[firstKey] = firstVal
   def = defineWith (v,n2) =>
     v2 = cfg?[n2]
     if v2 != undefined then v2 else f v, obj
@@ -240,7 +250,6 @@ Function::properties = (args...) -> define2 @, args...
 #
 #   >> Foo {test1: 1, _test2: 2, _test3: 10}
 #
-export configure = configureUsing (a) => a
 
 
 # Configures given object using the provided configuration. See `configure` for more details.
@@ -250,12 +259,12 @@ export configureLazy = configureUsing (f,obj) => f obj
 
 
 
-export configure2 = configureUsing (a) =>
+export configure = configureUsing (a) =>
   if a instanceof Lazy then a.delayed() else a
 
 
 configureParameters = (self, cfg) ->
-  configure2 self, cfg, self._params_
+  configure self, cfg, self._params_
 
 export class Composition
   constructor: (cfg,args...) ->

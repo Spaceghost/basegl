@@ -204,12 +204,9 @@ main = () ->
 
   controls = new Navigator scene
 
-  fontManager = new Font.FontManager null # FIME remove null
-  atlas = fontManager.load
-    fontFamily : 'fonts/DejaVuSansMono.ttf'
-    size       : 2048
-  await atlas.ready
-  atlas.loadGlyphs [32..126]
+  fonts = Font.manager()
+  atlas = await fonts.load 'fonts/DejaVuSansMono.ttf'
+
 
 
 
