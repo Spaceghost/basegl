@@ -5,7 +5,6 @@ import {group}      from 'basegl/display/Symbol'
 import * as Symbol from 'basegl/display/Symbol'
 import {circle, glslShape, union, grow, negate, rect, quadraticCurve, path}      from 'basegl/display/Shape'
 import {Navigator}      from 'basegl/navigation/Navigator'
-import {world}      from 'basegl/display/World'
 import * as basegl from 'basegl'
 import * as Shape     from 'basegl/display/Shape'
 
@@ -204,8 +203,7 @@ main = () ->
 
   controls = new Navigator scene
 
-  fonts = Font.manager()
-  atlas = await fonts.load 'fonts/DejaVuSansMono.ttf'
+  atlas = await basegl.world.fontManager.load 'fonts/DejaVuSansMono.ttf'
 
 
 
@@ -233,6 +231,12 @@ main = () ->
   n3 = scene.add nodeDef
   n3.position.xy = [400, 0]
   n3.id = 3
+
+  txtDef = basegl.text
+    str: 'The quick brown fox \njumps over the lazy dog'
+    atlas: atlas
+
+  txt1 = scene.add txtDef
 
   str = 'The quick brown fox \njumps over the lazy dog'
   txt = atlas.addText scene, str

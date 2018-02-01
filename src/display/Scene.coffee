@@ -1,8 +1,8 @@
+import {world}                            from 'basegl'
 import {DisplayObject, POINTER_EVENTS}    from 'basegl/display/DisplayObject'
 import {SymbolGeometry, SymbolFamily, DRAW_BUFFER}    from 'basegl/display/Symbol'
 import {Camera, GLCamera}  from 'basegl/navigation/Camera'
 import {animationManager}  from 'basegl/animation/Manager'
-import {world}             from 'basegl/display/World'
 import {disableBubbling}   from 'basegl/event/EventDispatcher'
 import {Shape}             from 'basegl/display/Shape'
 import {IdxPool}           from 'basegl/lib/container/Pool'
@@ -130,9 +130,11 @@ export class OffscreenScene extends Composition
     @_renderer.render @_model._glScene, @_glCamera
     @_glCamera.update()
 
-  add: (comp) ->
-    def = @model.registerSymbol comp
+  addSymbol: (s) ->
+    def = @model.registerSymbol s
     def.newInstance()
+
+  add: (a) -> a.addToScene @
 
   onEveryFrame: () => @update()
 
@@ -191,7 +193,6 @@ export class Scene extends Composition
     @_idBuffer = new Float32Array (4*@width*@height)
 
   _initDebug: () ->
-    console.log @
     @addEventListener 'keydown', (event) =>
       trigger = event.altKey && event.ctrlKey
       if not trigger then return
@@ -230,7 +231,7 @@ export class Scene extends Composition
 
     symbolFamilyID = @_mouseIDBuffer[0]
     symbolID       = @_mouseIDBuffer[1]
-    shapeID           = @_mouseIDBuffer[2]
+    shapeID        = @_mouseIDBuffer[2]
 
     ## Finding current SymbolTarget
     targetPath = new SymbolTargetPath symbolFamilyID, symbolID, shapeID
@@ -279,11 +280,11 @@ export scene = (cfg) ->
 export class SceneModel extends DisplayObject
   constructor: () ->
     super()
-    @_glScene               = new THREE.Scene
-    @materials              = new MaterialStore
+    @_glScene            = new THREE.Scene
+    @materials           = new MaterialStore
     @_symbolFamilyDefMap = new Map
     @_symbolFamilyIDMap  = new Map
-    @variables              = @materials.uniforms
+    @variables           = @materials.uniforms
     @_symbolFamilyIDPool = new IdxPool 1
 
   registerSymbol: (comp) ->

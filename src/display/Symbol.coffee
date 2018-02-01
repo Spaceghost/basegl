@@ -1,11 +1,10 @@
 import {Vector}          from "basegl/math/Vector"
 import {DisplayObject}   from "basegl/display/DisplayObject"
 import {IdxPool}         from 'basegl/lib/container/Pool'
+import {Composition}     from 'basegl/object/Property'
 import * as Reflect      from 'basegl/object/Reflect'
 import * as Property     from 'basegl/object/Property'
 import * as Image        from 'basegl/display/Image'
-
-
 
 
 
@@ -55,9 +54,9 @@ inferAttribType = (a) ->
 
 
 
-#################
+##############
 ### Symbol ###
-#################
+##############
 
 export DRAW_BUFFER =
   NORMAL : 0
@@ -169,12 +168,16 @@ export class Symbol
 
   @getter 'instances', -> [@_instances...]
 
+  addToScene: (scene) -> scene.addSymbol @
+
+
 export symbol = Property.consAlias Symbol
 
 
-#########################
+
+######################
 ### SymbolGeometry ###
-#########################
+######################
 
 export class SymbolGeometry
   constructor: (@attributeMap=new Map, @maxElements=1000) ->
@@ -230,27 +233,9 @@ export class SymbolGeometry
 
 
 
-#######################
-### SymbolFamily ###
-#######################
-
-export class SymbolFamily
-  constructor: (@id, @definition, @geometry=new SymbolGeometry) ->
-    @_mesh = new THREE.Mesh @geometry.geometry, @definition.material
-    @_symbolIDMap = new Map
-
-  newInstance: () ->
-    id   = @geometry.reserveID()
-    inst = new SymbolInstance id, @
-    @definition.registerInstance inst
-    @_symbolIDMap.set id, inst
-    inst
-
-  lookupSymbol: (id) -> @_symbolIDMap.get id
-
-
-
-
+######################
+### SymbolInstance ###
+######################
 
 export class SymbolInstance extends DisplayObject
   constructor: (@id, @family) ->
@@ -291,6 +276,31 @@ export class SymbolInstance extends DisplayObject
 
 
 
+
+####################
+### SymbolFamily ###
+####################
+
+export class SymbolFamily
+  constructor: (@id, @definition, @geometry=new SymbolGeometry) ->
+    @_mesh = new THREE.Mesh @geometry.geometry, @definition.material
+    @_symbolIDMap = new Map
+
+  newInstance: () ->
+    id   = @geometry.reserveID()
+    inst = new SymbolInstance id, @
+    @definition.registerInstance inst
+    @_symbolIDMap.set id, inst
+    inst
+
+  lookupSymbol: (id) -> @_symbolIDMap.get id
+
+
+
+
+#############
+### Utils ###
+#############
 
 export group = (children) ->
   obj = new DisplayObject

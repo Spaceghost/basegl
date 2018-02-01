@@ -10,6 +10,7 @@ import {BinPack}     from 'basegl/display/texture/BinPack'
 import {Composition} from 'basegl/object/Property'
 import {typedValue}  from 'basegl/display/Symbol'
 
+
 letterShape = new Shape.RawShader
   fragment: '''
 
@@ -361,6 +362,49 @@ class Manager
     a.ready
 
 export manager = Property.consAlias Manager
+
+
+############
+### Text ###
+############
+
+class Text extends Composition
+  @parameters
+    _str: null
+    _atlas: null
+
+  addToScene: (scene) ->
+    glyphMaxOff = 2
+
+    newlines = 0
+    for char in @str
+      if char == '\n' then newlines += 1
+
+    offx = 0
+    offy = newlines * @atlas.glyphSize
+    letterSpacing = 0 # FIXME: make related to size
+    letters = []
+    for char in @str
+      if char == '\n'
+        offx = 0
+        offy -= @atlas.glyphSize
+      else
+        letter = scene.add @atlas.letterDef
+        info   = @atlas.getInfo char
+        loc    = info.loc
+        letter.position.xy = [offx, info.shape.y + offy]
+
+        gw = loc.width  + 2*glyphMaxOff
+        gh = loc.height + 2*glyphMaxOff
+        letter.bbox.xy = [gw,gh]
+        letter.variables.glyphLoc = [loc.x - glyphMaxOff, loc.y - glyphMaxOff, gw, gh]
+        offx += loc.width + info.shape.advanceWidth + letterSpacing
+        letters.push letter
+
+    txt = group letters
+    txt
+
+export text = Property.consAlias Text
 
 
 
