@@ -305,3 +305,99 @@ export class Composition
 # console.log c2_2.test1
 #
 # raise "end"
+
+
+class Mixin
+  constructor: (@cls, @args) ->
+  construct: (cfg) -> new @cls cfg, @args
+
+export class Composable
+  constructor: (cfg={}, args...) ->
+    defineRedirection = (k,mk) =>
+      defineGetter @, mk, ->@[k][mk]
+      defineSetter @, mk, (v)->@[k][mk]=v
+
+    @__mixins__ = []
+    @init(cfg, args...)
+    initKeys = Object.keys @
+
+    # Handle embed mixins (mixins not assigned to self-variable)
+    embedMx = new Set @__mixins__
+    for key in initKeys
+      embedMx.delete @[key]
+    embedMx.forEach (mx) =>
+      proto = mx.cls.prototype
+      fn    = proto.init
+      if fn == undefined then fn = proto.constructor # ordinary function passed!
+      fn.call @, cfg, mx.args
+    delete @__mixins__
+
+    # Handle all keys after initialization
+    for key in Object.keys @
+      val = @[key]
+      if val instanceof Mixin
+        obj    = val.construct cfg
+        @[key] = obj
+        for mkey in Object.getOwnPropertyNames obj
+          defineRedirection key, mkey
+        for mkey in Object.getOwnPropertyNames (Object.getPrototypeOf obj)
+          if (mkey != 'constructor') && (mkey != 'init') then defineRedirection key, mkey
+      else
+        if      key.startsWith '__' then nkey = key.slice(2)
+        else if key.startsWith '_'  then nkey = key.slice(1); defineGetter @, nkey, ((k)->-> @[k])(key)
+        else    nkey = key
+        cfgVal = cfg[nkey]
+        if cfgVal? then @[key] = cfgVal
+
+
+  mixin: (cls, args...) ->
+    mx = new Mixin cls, args
+    @__mixins__.push mx
+    mx
+
+  mixins: (clss, args...) ->
+    mxs = []
+    for cls in clss
+      mxs.push (@mixin cls, args...)
+    mxs
+
+#
+# class C1 extends Composable
+#   init: () ->
+#     @p1   = 1
+#     @_p2  = 2
+#     @_p22 = 6
+#     @__p3 = 3
+#
+#   foo: () -> "foo"
+#
+# class C2 extends Composable
+#   init: () ->
+#     @c1      = @mixin C1
+#     @c2_p1   = 11
+#     @_c2_p2  = 12
+#     @_c2_p22 = 16
+#     @__c2_p3 = 13
+#
+#   bar: () -> "bar"
+#
+#
+# xmixin = () -> @x = 'x'
+#
+# class C3 extends Composable
+#   init: () ->
+#     # @mixin C1
+#     @mixin xmixin
+#     @c3_p1   = 11
+#
+#   bar: () -> "bar"
+#
+#
+# c1 = new C1
+# c2 = new C2
+# c3 = new C3
+#
+# console.log c3
+# console.log c3.p2
+#
+# throw "end"

@@ -1,6 +1,9 @@
-import {StyledObject}  from 'basegl/display/DisplayObject'
-import {consAlias}     from 'basegl/object/Property'
-import {vector, point} from 'basegl/math/Vector'
+import {styleMixin}           from 'basegl/display/DisplayObject'
+import {consAlias}            from 'basegl/object/Property'
+import {vector, point}        from 'basegl/math/Vector'
+import {Composable}           from "basegl/object/Property"
+import {eventDispatcherMixin} from "basegl/event/EventDispatcher"
+
 
 import * as M          from 'basegl/math/Common'
 import * as Color      from 'basegl/display/Color'
@@ -184,9 +187,9 @@ glslBBRef = (shape, idx) -> new GLSLObjectRef shape, ((s) => s.bbName + '[' + id
 protoBind     = (f) -> (args...) -> f @, args...
 protoBindCons = (t) -> protoBind (consAlias t)
 
-export class Shape extends StyledObject
-  constructor: () ->
-    super()
+export class Shape extends Composable
+  init: () ->
+    @mixins [styleMixin, eventDispatcherMixin]
     @type  = Shape
     @_bbox = new BBox (glslBBRef @, 0), (glslBBRef @, 1), (glslBBRef @, 2), (glslBBRef @, 3)
 
@@ -257,7 +260,7 @@ foldl = (f, a, bs) =>
   if bs.length == 0 then a
   else foldl f, f(a,bs[0]), bs.slice(1)
 
-# foldl = (f, a, bs) => f a, bs[0]
+
 
 ################
 ### Booleans ###

@@ -1,6 +1,7 @@
-import {EventDispatcher} from "basegl/event/EventDispatcher"
-import {Vector}          from "basegl/math/Vector"
-import {mat4}            from 'gl-matrix'
+import {eventDispatcherMixin} from "basegl/event/EventDispatcher"
+import {Vector}               from "basegl/math/Vector"
+import {mat4}                 from 'gl-matrix'
+import {Composable}           from "basegl/object/Property"
 
 
 #####################
@@ -12,24 +13,20 @@ export POINTER_EVENTS =
   ENABLED:  "enabled"  # enable  starting with this element
   DISABLED: "disabled" # disable starting with this element
 
-export class DisplayStyle
-  constructor: () ->
+export styleMixin = -> @style = new DisplayStyle
+export class DisplayStyle extends Composable
+  init: () ->
     @pointerEvents         = POINTER_EVENTS.INHERIT
     @childrenPointerEvents = POINTER_EVENTS.INHERIT
 
-export class StyledObject extends EventDispatcher
-  constructor: () ->
-    super()
-    @style = new DisplayStyle
-
-export class DisplayObject extends StyledObject
-  constructor: () ->
-    super()
-    @origin = mat4.create()
-    @xform  = mat4.create()
-    @position  = new Vector [0,0,0], @onTransformed.bind @
-    @scale     = new Vector [1,1,1], @onTransformed.bind @
-    @rotation  = new Vector [0,0,0], @onTransformed.bind @
+export class DisplayObject extends Composable
+  init: () ->
+    @mixins [styleMixin, eventDispatcherMixin]
+    @origin   = mat4.create()
+    @xform    = mat4.create()
+    @position = new Vector [0,0,0], @onTransformed.bind @
+    @scale    = new Vector [1,1,1], @onTransformed.bind @
+    @rotation = new Vector [0,0,0], @onTransformed.bind @
 
   setOrigin: (newOrigin) ->
     @origin = newOrigin
@@ -49,7 +46,6 @@ export class DisplayObject extends StyledObject
 
   onTransformed: () ->
     @updateChildrenOrigin()
-
 
 
 export group = (elems) ->

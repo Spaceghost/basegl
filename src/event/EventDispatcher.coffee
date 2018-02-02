@@ -1,16 +1,17 @@
 import {HierarchicalObject} from "basegl/object/HierarchicalObject"
 import {setObjectProperty}  from "basegl/object/Property"
+import {Composable}         from "basegl/object/Property"
 
 
 #######################
 ### EventDispatcher ###
 #######################
 
-export class EventDispatcher extends HierarchicalObject
-  constructor: (args...) ->
-    super(args...)
+export class EventDispatcher extends Composable
+  init: () ->
+    @_hierarchy        = @mixin HierarchicalObject
     @_captureListeners = {}
-    @_bubbleListeners = {}
+    @_bubbleListeners  = {}
 
   addEventListener: (name, callback, useCapture=false) ->
     ls = if useCapture then @_captureListeners else @_bubbleListeners
@@ -55,5 +56,15 @@ export class EventDispatcher extends HierarchicalObject
       if f el then target = el
     return target
 
+export eventDispatcherMixin = -> @_eventDispatcher = @mixin EventDispatcher
 
 export disableBubbling = (e) -> setObjectProperty e, 'bubbles', false
+
+
+# class C2 extends Composable
+#   init: () ->
+#     @c1      = @mixin C1
+#     @c2_p1   = 11
+#     @_c2_p2  = 12
+#     @_c2_p22 = 16
+#     @__c2_p3 = 13

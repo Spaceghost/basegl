@@ -1,15 +1,14 @@
-import * as Property from "basegl/object/Property"
+import {Composable} from "basegl/object/Property"
 
 
 ##########################
 ### HierarchicalObject ###
 ##########################
 
-export class HierarchicalObject
-  constructor: (children=[]) ->
-    @_children = new Set()
+export class HierarchicalObject extends Composable
+  init: () ->
+    @_children = new Set
     @_parent   = null
-    @addChildren children...
 
   @property 'parent', get: -> @_parent
 
