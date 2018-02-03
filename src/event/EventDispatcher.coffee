@@ -1,6 +1,6 @@
-import {HierarchicalObject} from "basegl/object/HierarchicalObject"
-import {setObjectProperty}  from "basegl/object/Property"
-import {Composable}         from "basegl/object/Property"
+import {HierarchicalObject}     from "basegl/object/HierarchicalObject"
+import {setObjectProperty}      from "basegl/object/Property"
+import {Composable, fieldMixin} from "basegl/object/Property"
 
 
 #######################
@@ -8,8 +8,8 @@ import {Composable}         from "basegl/object/Property"
 #######################
 
 export class EventDispatcher extends Composable
-  init: () ->
-    @_hierarchy        = @mixin HierarchicalObject
+  init: (children, cfg) ->
+    @_hierarchy        = @mixin HierarchicalObject, children, cfg
     @_captureListeners = {}
     @_bubbleListeners  = {}
 
@@ -56,7 +56,7 @@ export class EventDispatcher extends Composable
       if f el then target = el
     return target
 
-export eventDispatcherMixin = -> @_eventDispatcher = @mixin EventDispatcher
+export eventDispatcherMixin = fieldMixin EventDispatcher
 
 export disableBubbling = (e) -> setObjectProperty e, 'bubbles', false
 

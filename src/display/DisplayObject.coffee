@@ -1,7 +1,7 @@
-import {eventDispatcherMixin} from "basegl/event/EventDispatcher"
-import {Vector}               from "basegl/math/Vector"
-import {mat4}                 from 'gl-matrix'
-import {Composable}           from "basegl/object/Property"
+import {eventDispatcherMixin}   from "basegl/event/EventDispatcher"
+import {Vector}                 from "basegl/math/Vector"
+import {mat4}                   from 'gl-matrix'
+import {Composable, fieldMixin} from "basegl/object/Property"
 
 
 #####################
@@ -10,8 +10,8 @@ import {Composable}           from "basegl/object/Property"
 
 export POINTER_EVENTS =
   INHERIT:  "inherit"
-  ENABLED:  "enabled"  # enable  starting with this element
-  DISABLED: "disabled" # disable starting with this element
+  ENABLED:  "enabled"  # enable  for this element and its children
+  DISABLED: "disabled" # disable for this element and its children
 
 export styleMixin = -> @style = new DisplayStyle
 export class DisplayStyle extends Composable
@@ -20,8 +20,9 @@ export class DisplayStyle extends Composable
     @childrenPointerEvents = POINTER_EVENTS.INHERIT
 
 export class DisplayObject extends Composable
-  init: () ->
-    @mixins [styleMixin, eventDispatcherMixin]
+  init: (children) ->
+    @mixin styleMixin
+    @mixin eventDispatcherMixin, children
     @origin   = mat4.create()
     @xform    = mat4.create()
     @position = new Vector [0,0,0], @onTransformed.bind @
@@ -46,6 +47,8 @@ export class DisplayObject extends Composable
 
   onTransformed: () ->
     @updateChildrenOrigin()
+    
+export displayObjectMixin = fieldMixin DisplayObject
 
 
 export group = (elems) ->

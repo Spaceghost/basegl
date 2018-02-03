@@ -1,4 +1,4 @@
-import * as basegl   from 'basegl/display/Scene'
+import * as basegl   from 'basegl'
 import * as Property from 'basegl/object/Property'
 import * as Shape    from 'basegl/display/Shape'
 import * as Image    from 'basegl/display/Image'
@@ -7,8 +7,9 @@ import * as Promise  from 'bluebird'
 
 import {Symbol, group}   from 'basegl/display/Symbol'
 import {BinPack}     from 'basegl/display/texture/BinPack'
-import {Composition} from 'basegl/object/Property'
+import {Composition, Composable} from 'basegl/object/Property'
 import {typedValue}  from 'basegl/display/Symbol'
+import {DisplayObject, displayObjectMixin} from 'basegl/display/DisplayObject'
 
 
 letterShape = new Shape.RawShader
@@ -184,14 +185,6 @@ pathFlipYMut = (path) ->
   path
 
 
-############
-### Font ###
-############
-
-# export class Font
-#   constructor
-
-
 
 #############
 ### Atlas ###
@@ -240,7 +233,7 @@ class Atlas extends Composition
 
     @_letterDef = new Symbol letterShape
     @_letterDef.bbox.xy = [64,64]
-    @_letterDef.variables.glyphLoc  = typedValue 'vec4' # FIXME
+    @_letterDef.variables.glyphLoc  = typedValue 'vec4' # FIXME utilize Vector defaults
     @_letterDef.variables.glyphZoom = 1
     @_letterDef.globalVariables.glyphsTexture = @texture
     @_letterDef.globalVariables.glyphsTextureSize = @size
@@ -352,26 +345,55 @@ class Atlas extends Composition
 export atlas = Property.consAlias Atlas
 
 
-class Manager
-  constructor: () ->
-    @atlasses = new IDMap
+class Manager extends Composable
+  init: () ->
+    @_fontSrcMap = new Map
+    @_atlasses   = new Map
 
-  load: (cfg) ->
+  register: (name, path) ->
+    # TODO: We can make it automatically populated with registerSource
+    #       and using XHR to list that directory
+    @_fontSrcMap.set name, path
+
+  load: (name, cfg) ->
+    cfg = Object.assign {}, cfg
+    cfg.fontFamily = @lookupFontSource name
     a = atlas cfg
-    @atlasses.insert a
+    @atlasses.set name, a
     a.ready
 
+  lookupFontSource: (name) -> @fontSrcMap.get name
+  lookupAtlas:      (name) -> @atlasses.get name
+
+
 export manager = Property.consAlias Manager
+
+
+
+####################
+### TextInstance ###
+####################
+
+class TextInstance extends Composable
+  init: (letters, cfg) ->
+    @mixin displayObjectMixin, letters, cfg
+
+export textInstance = Property.consAlias TextInstance
+
 
 
 ############
 ### Text ###
 ############
 
-class Text extends Composition
-  @parameters
-    _str: null
-    _atlas: null
+class Text extends Composable
+  init: (cfg) ->
+    @_str         = ''
+    @_fontFamily  = null
+    @_fontManager = basegl.fontManager
+    @configure cfg
+    @_atlas = @_fontManager.lookupAtlas @_fontFamily
+
 
   addToScene: (scene) ->
     glyphMaxOff = 2
@@ -401,8 +423,7 @@ class Text extends Composition
         offx += loc.width + info.shape.advanceWidth + letterSpacing
         letters.push letter
 
-    txt = group letters
-    txt
+    textInstance letters
 
 export text = Property.consAlias Text
 

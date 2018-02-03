@@ -302,10 +302,7 @@ export class SymbolFamily
 ### Utils ###
 #############
 
-export group = (children) ->
-  obj = new DisplayObject
-  obj.addChildren children...
-  obj
+export group = (children) -> new DisplayObject children
 
 
 # export class SymbolInstanceProxy extends DisplayObject

@@ -306,98 +306,124 @@ export class Composition
 #
 # raise "end"
 
+forNonSpecialMethod = (obj, f) =>
+  for k in Object.getOwnPropertyNames obj
+    if (k != 'constructor') && (k != 'init') then f k
 
 class Mixin
   constructor: (@cls, @args) ->
-  construct: (cfg) -> new @cls cfg, @args
+  construct: () -> new @cls @args...
 
 export class Composable
-  constructor: (cfg={}, args...) ->
-    defineRedirection = (k,mk) =>
-      defineGetter @, mk, ->@[k][mk]
-      defineSetter @, mk, (v)->@[k][mk]=v
+  constructor: (args...) ->
+    subredirect = (mk) => (k) =>
+      defineGetter @, k,     -> @[mk][k]
+      defineSetter @, k, (v) -> @[mk][k]=v
 
-    @__mixins__ = []
-    @init(cfg, args...)
-    initKeys = Object.keys @
+    redirectGetter = (k,a,ak) => defineGetter @, k,    ->a[ak]
+    redirectSetter = (k,a,ak) => defineSetter @, k, (v)->a[ak]=v
+    redirect       = (k,a,ak) => redirectSetter(k,a,ak); redirectSetter(k,a,ak)
+    redirectSimple = (k,a)    => redirect(k,a,k)
 
-    # Handle embed mixins (mixins not assigned to self-variable)
-    embedMx = new Set @__mixins__
-    for key in initKeys
-      embedMx.delete @[key]
-    embedMx.forEach (mx) =>
-      proto = mx.cls.prototype
-      fn    = proto.init
-      if fn == undefined then fn = proto.constructor # ordinary function passed!
-      fn.call @, cfg, mx.args
-    delete @__mixins__
+    embedMixin = (mx, fredirect) =>
+      obj   = mx.construct()
+      proto = Object.getPrototypeOf obj
+      fredirect mkey,obj for mkey in Object.getOwnPropertyNames obj
+      forNonSpecialMethod proto, (mkey) => fredirect mkey,obj
+      obj
+
+    discoverEmbedMixins = (f) =>
+      @__mixins__ = []
+      f()
+      mxs = @__mixins__
+      delete @__mixins__
+      set = new Set mxs
+      set.delete @[key] for key in Object.keys @
+      set
+
+    embedMx = discoverEmbedMixins => @init(args...)
+    embedMx.forEach (mx) => embedMixin mx, redirectSimple
 
     # Handle all keys after initialization
     for key in Object.keys @
       val = @[key]
-      if val instanceof Mixin
-        obj    = val.construct cfg
-        @[key] = obj
-        for mkey in Object.getOwnPropertyNames obj
-          defineRedirection key, mkey
-        for mkey in Object.getOwnPropertyNames (Object.getPrototypeOf obj)
-          if (mkey != 'constructor') && (mkey != 'init') then defineRedirection key, mkey
-      else
-        if      key.startsWith '__' then nkey = key.slice(2)
-        else if key.startsWith '_'  then nkey = key.slice(1); defineGetter @, nkey, ((k)->-> @[k])(key)
-        else    nkey = key
-        cfgVal = cfg[nkey]
-        if cfgVal? then @[key] = cfgVal
+      if val instanceof Mixin then @[key] = embedMixin val, (subredirect key)
+      if (key.startsWith '_') && not(key.startsWith '__')
+        redirectGetter key.slice(1), @, key
 
+  configure: (cfg) ->
+    if cfg? then for key in Object.keys @
+      if      key.startsWith '__' then nkey = key.slice 2
+      else if key.startsWith '_'  then nkey = key.slice 1
+      else    nkey = key
+      cfgVal = cfg[nkey]
+      if cfgVal? then @[key] = cfgVal
 
   mixin: (cls, args...) ->
-    mx = new Mixin cls, args
-    @__mixins__.push mx
-    mx
+    if cls.prototype.init == undefined
+      cls.call @, args...
+    else
+      mx = new Mixin cls, args
+      @__mixins__.push mx
+      mx
 
-  mixins: (clss, args...) ->
-    mxs = []
-    for cls in clss
-      mxs.push (@mixin cls, args...)
-    mxs
+  mixins: (clss, args...) -> @mixin cls, args... for cls in clss
 
-#
+
+export fieldMixin = (cls) =>
+  fieldName = '_' + cls.name.charAt(0).toLowerCase() + cls.name.slice(1)
+  (args...) -> @[fieldName] = @mixin cls, args...
+
 # class C1 extends Composable
-#   init: () ->
-#     @p1   = 1
-#     @_p2  = 2
-#     @_p22 = 6
-#     @__p3 = 3
-#
-#   foo: () -> "foo"
+#   init: (id,cfg) ->
+#     @_c1_id  = id
+#     @c1_p1   = 'c1_p1'
+#     @_c1_p2  = 'c1_p2'
+#     @__c1_p3 = 'c1_p3'
+#     @configure cfg
+#   c1_foo: () -> "foo"
 #
 # class C2 extends Composable
-#   init: () ->
-#     @c1      = @mixin C1
-#     @c2_p1   = 11
-#     @_c2_p2  = 12
-#     @_c2_p22 = 16
-#     @__c2_p3 = 13
-#
-#   bar: () -> "bar"
-#
-#
-# xmixin = () -> @x = 'x'
+#   init: (id,cfg) ->
+#     @_c2_id  = id
+#     @c2_p1   = 'c2_p1'
+#     @_c2_p2  = 'c2_p2'
+#     @__c2_p3 = 'c2_p3'
+#     @configure cfg
+#   c2_foo: () -> "foo"
 #
 # class C3 extends Composable
-#   init: () ->
-#     # @mixin C1
-#     @mixin xmixin
-#     @c3_p1   = 11
+#   init: (id,cfg) ->
+#     @_c3_id  = id
+#     @c3_p1   = 'c3_p1'
+#     @_c3_p2  = 'c3_p2'
+#     @__c3_p3 = 'c3_p3'
+#     @configure cfg
+#   c3_foo: () -> "foo"
 #
+# class CX1 extends Composable
+#   init: (cfg) ->
+#     @c1 = @mixin C1, 1, cfg
+#     @c2 = @mixin C2, 2, cfg
+#     @c3 = @mixin C3, 3, cfg
+#     @configure cfg
 #   bar: () -> "bar"
 #
 #
-# c1 = new C1
-# c2 = new C2
-# c3 = new C3
+# c1_mixin = (cfg) -> @_c1 = @mixin C1, 1, cfg
 #
-# console.log c3
-# console.log c3.p2
+# class CX2 extends Composable
+#   init: (cfg) ->
+#     @mixin c1_mixin, cfg
+#     @configure cfg
+#   bar: () -> "bar"
+#
+#
+# cx1 = new CX1
+# cx2 = new CX2
+#   c1_p1: 1
+# console.log cx1
+# console.log cx2
+# console.log cx2.c1_p1
 #
 # throw "end"

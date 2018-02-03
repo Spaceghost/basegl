@@ -203,7 +203,10 @@ main = () ->
 
   controls = new Navigator scene
 
-  atlas = await basegl.world.fontManager.load 'fonts/DejaVuSansMono.ttf'
+
+  basegl.fontManager.register 'DejaVuSansMono', 'fonts/DejaVuSansMono.ttf'
+  await basegl.fontManager.load 'DejaVuSansMono'
+
 
 
 
@@ -234,14 +237,14 @@ main = () ->
 
   txtDef = basegl.text
     str: 'The quick brown fox \njumps over the lazy dog'
-    atlas: atlas
+    fontFamily: 'DejaVuSansMono'
 
   txt1 = scene.add txtDef
 
-  str = 'The quick brown fox \njumps over the lazy dog'
-  txt = atlas.addText scene, str
-  txt.position.x += 100
-  txt.position.y += 100
+  # str = 'The quick brown fox \njumps over the lazy dog'
+  # txt = atlas.addText scene, str
+  # txt.position.x += 100
+  # txt.position.y += 100
 
   n1.variables.pointerEvents = 1
   n2.variables.pointerEvents = 1
