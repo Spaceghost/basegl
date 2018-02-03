@@ -23,4 +23,5 @@ export class World
     s.domElement.addEventListener 'mouseover', (e) => @activeScene = s
     s.domElement.addEventListener 'mouseout',  (e) => @activeScene = null
 
-export world = Property.consAlias World
+export world       = Property.consAlias World
+export globalWorld = world()

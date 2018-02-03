@@ -315,6 +315,8 @@ class Mixin
   construct: () -> new @cls @args...
 
 export class Composable
+  cons: ->
+  init: ->
   constructor: (args...) ->
     subredirect = (mk) => (k) =>
       defineGetter @, k,     -> @[mk][k]
@@ -341,7 +343,7 @@ export class Composable
       set.delete @[key] for key in Object.keys @
       set
 
-    embedMx = discoverEmbedMixins => @init(args...)
+    embedMx = discoverEmbedMixins => @cons args...
     embedMx.forEach (mx) => embedMixin mx, redirectSimple
 
     # Handle all keys after initialization
@@ -350,6 +352,9 @@ export class Composable
       if val instanceof Mixin then @[key] = embedMixin val, (subredirect key)
       if (key.startsWith '_') && not(key.startsWith '__')
         redirectGetter key.slice(1), @, key
+
+    @init args...
+
 
   configure: (cfg) ->
     if cfg? then for key in Object.keys @
@@ -374,8 +379,11 @@ export fieldMixin = (cls) =>
   fieldName = '_' + cls.name.charAt(0).toLowerCase() + cls.name.slice(1)
   (args...) -> @[fieldName] = @mixin cls, args...
 
+
+
+
 # class C1 extends Composable
-#   init: (id,cfg) ->
+#   cons: (id,cfg) ->
 #     @_c1_id  = id
 #     @c1_p1   = 'c1_p1'
 #     @_c1_p2  = 'c1_p2'
@@ -384,7 +392,7 @@ export fieldMixin = (cls) =>
 #   c1_foo: () -> "foo"
 #
 # class C2 extends Composable
-#   init: (id,cfg) ->
+#   cons: (id,cfg) ->
 #     @_c2_id  = id
 #     @c2_p1   = 'c2_p1'
 #     @_c2_p2  = 'c2_p2'
@@ -393,7 +401,7 @@ export fieldMixin = (cls) =>
 #   c2_foo: () -> "foo"
 #
 # class C3 extends Composable
-#   init: (id,cfg) ->
+#   cons: (id,cfg) ->
 #     @_c3_id  = id
 #     @c3_p1   = 'c3_p1'
 #     @_c3_p2  = 'c3_p2'
@@ -402,7 +410,7 @@ export fieldMixin = (cls) =>
 #   c3_foo: () -> "foo"
 #
 # class CX1 extends Composable
-#   init: (cfg) ->
+#   cons: (cfg) ->
 #     @c1 = @mixin C1, 1, cfg
 #     @c2 = @mixin C2, 2, cfg
 #     @c3 = @mixin C3, 3, cfg
@@ -413,7 +421,7 @@ export fieldMixin = (cls) =>
 # c1_mixin = (cfg) -> @_c1 = @mixin C1, 1, cfg
 #
 # class CX2 extends Composable
-#   init: (cfg) ->
+#   cons: (cfg) ->
 #     @mixin c1_mixin, cfg
 #     @configure cfg
 #   bar: () -> "bar"

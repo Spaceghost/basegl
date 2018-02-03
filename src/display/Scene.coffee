@@ -1,4 +1,3 @@
-import {world}                            from 'basegl'
 import {DisplayObject, POINTER_EVENTS}    from 'basegl/display/DisplayObject'
 import {SymbolGeometry, SymbolFamily, DRAW_BUFFER}    from 'basegl/display/Symbol'
 import {Camera, GLCamera}  from 'basegl/navigation/Camera'
@@ -8,14 +7,14 @@ import {Shape}             from 'basegl/display/Shape'
 import {IdxPool}           from 'basegl/lib/container/Pool'
 import {Stats}             from 'basegl/lib/Stats'
 import {setObjectProperty} from 'basegl/object/Property'
+import * as World from 'basegl/display/World'
 
 import * as Color from 'basegl/display/Color'
 import * as Debug from 'basegl/debug/GLInspector'
 import * as Property    from 'basegl/object/Property'
-import {define, mixin, configure, configureLazy, params, lazy, configure2, Composition} from 'basegl/object/Property'
+import {define, mixin, configure, configureLazy, params, lazy, configure2, Composition, Composable} from 'basegl/object/Property'
 
-import {EventDispatcher} from 'basegl/event/EventDispatcher'
-
+import {EventDispatcher, eventDispatcherMixin} from 'basegl/event/EventDispatcher'
 
 unsafeWithReparented = (a, newParent, f) ->
   oldParent = a._parent
@@ -77,28 +76,26 @@ export class MaterialStore
 
 
 
-export class OffscreenScene extends Composition
-  @mixin eventDispatcher: EventDispatcher
+export class OffscreenScene extends Composable
+  cons: (cfg) ->
+    @mixin eventDispatcherMixin
+    @_model      = new SceneModel # TODO: make lazy
+    @_camera     = new Camera # TODO: make lazy
+    @_width      = 256
+    @_height     = 256
+    @_autoUpdate = true
+    @configure cfg
 
-  @parameters
-    _model      : lazy => new SceneModel
-    _camera     : lazy => new Camera
-    _width      : 256
-    _height     : 256
-    _autoUpdate : true
+    @_canvas = null
+    @_stats  = null
 
-  @properties
-    _canvas : null
-    _stats  : null
-
-  init: (cfg) ->
-    @mixins.eventDispatcher.constructor()
-    opts = configure {}, cfg,
-      start: true
+  init: ->
+    # opts = configure {}, cfg,
+    #   start: true
 
     @_initRenderer()
     @viewTrough @camera
-    world.registerOffscreenScene @
+    World.globalWorld.registerOffscreenScene @
     @_beginTime = Date.now()
     # if opts.start then animationManager.addEveryDrawAnimation @onEveryFrame
 
@@ -140,18 +137,13 @@ export class OffscreenScene extends Composition
 
 
 
-export class Scene extends Composition
-  @mixin offscreen: OffscreenScene
+export class Scene extends Composable
+  cons: (cfg) ->
+    @_domElement = null
+    @_offscreen  = @mixin OffscreenScene, cfg
+    @configure cfg
 
-  @parameters
-    _domElement : null
-
-
-  ### Initialization ###
-
-  init: (cfg) ->
-    @mixins.offscreen.constructor(cfg)
-
+  init: ->
     @_initDOM()
     @_initMouseSupport()
     @_initDebug()
@@ -160,7 +152,7 @@ export class Scene extends Composition
 
     if @autoUpdate
       animationManager.addEveryDrawAnimation @onEveryFrame.bind(@)
-    world.registerScene @
+    World.globalWorld.registerScene @
 
   _initDOM: () ->
     domID = @domElement

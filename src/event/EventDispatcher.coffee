@@ -8,7 +8,7 @@ import {Composable, fieldMixin} from "basegl/object/Property"
 #######################
 
 export class EventDispatcher extends Composable
-  init: (children, cfg) ->
+  cons: (children, cfg) ->
     @_hierarchy        = @mixin HierarchicalObject, children, cfg
     @_captureListeners = {}
     @_bubbleListeners  = {}

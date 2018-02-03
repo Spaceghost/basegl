@@ -6,7 +6,7 @@ import {Composable} from "basegl/object/Property"
 ##########################
 
 export class HierarchicalObject extends Composable
-  init: (children=[]) ->
+  cons: (children=[]) ->
     @_children = new Set
     @_parent   = null
     @addChildren children...

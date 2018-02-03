@@ -201,42 +201,37 @@ export class GlyphShape
 export class GlyphInfo
   constructor: (@shape, @loc) ->
 
-class Atlas extends Composition
-  @parameters
-    _fontFamily : null
-    _size       : 2048
-    _glyphSize  : 64
-    _spread     : 16
-    _preload    : [32..126]
+class Atlas extends Composable
+  cons: (fontFamily, cfg) ->
+    @_fontFamily = fontFamily
+    @_size       = 2048
+    @_glyphSize  = 64
+    @_spread     = 16
+    @_preload    = [32..126]
+    @configure cfg
 
-  @properties
-    _scene     : null
-    _texture   : null
-    _letterDef : null
-
-  init: () ->
     @_glyphs = new Map
-    @_pack   = new BinPack @size, @size
+    @_pack   = new BinPack @_size, @_size
     @_font   = null
-    @_rt     = new THREE.WebGLRenderTarget @size, @size
+    @_rt     = new THREE.WebGLRenderTarget @_size, @_size
     @_scene  = basegl.scene
       autoUpdate : false
-      width      : @size
-      height     : @size
+      width      : @_size
+      height     : @_size
 
-    @_texture = new THREE.CanvasTexture @scene.canvas
+    @_texture = new THREE.CanvasTexture @_scene.canvas
 
-    @ready = loadFont(@fontFamily).then (font) =>
+    @ready = loadFont(@_fontFamily).then (font) =>
       @_font = font
-      @loadGlyphs @preload
+      @loadGlyphs @_preload
       @
 
     @_letterDef = new Symbol letterShape
     @_letterDef.bbox.xy = [64,64]
     @_letterDef.variables.glyphLoc  = typedValue 'vec4' # FIXME utilize Vector defaults
     @_letterDef.variables.glyphZoom = 1
-    @_letterDef.globalVariables.glyphsTexture = @texture
-    @_letterDef.globalVariables.glyphsTextureSize = @size
+    @_letterDef.globalVariables.glyphsTexture = @_texture
+    @_letterDef.globalVariables.glyphsTextureSize = @_size
 
     @_glyphSymbol = new Symbol glyphShape
 
@@ -346,7 +341,7 @@ export atlas = Property.consAlias Atlas
 
 
 class Manager extends Composable
-  init: () ->
+  cons: () ->
     @_fontSrcMap = new Map
     @_atlasses   = new Map
 
@@ -356,9 +351,8 @@ class Manager extends Composable
     @_fontSrcMap.set name, path
 
   load: (name, cfg) ->
-    cfg = Object.assign {}, cfg
-    cfg.fontFamily = @lookupFontSource name
-    a = atlas cfg
+    fontFamily = @lookupFontSource name
+    a = atlas fontFamily, cfg
     @atlasses.set name, a
     a.ready
 
@@ -375,7 +369,7 @@ export manager = Property.consAlias Manager
 ####################
 
 class TextInstance extends Composable
-  init: (letters, cfg) ->
+  cons: (letters, cfg) ->
     @mixin displayObjectMixin, letters, cfg
 
 export textInstance = Property.consAlias TextInstance
@@ -387,7 +381,7 @@ export textInstance = Property.consAlias TextInstance
 ############
 
 class Text extends Composable
-  init: (cfg) ->
+  cons: (cfg) ->
     @_str         = ''
     @_fontFamily  = null
     @_fontManager = basegl.fontManager

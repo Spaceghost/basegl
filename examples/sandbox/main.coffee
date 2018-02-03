@@ -115,112 +115,24 @@ makeSelectable = (a) ->
 
 
 
-### Testing ###
-
-
-myShape = basegl.expr ->
-  base    = circle('myVar')
-  base.fill(Color.rgb [0,0,0,0.7]).move(200,200)
-
-
-
-
-
 main = () ->
 
-  scene = basegl.scene {domElement: 'basegl-root'}
-  console.log '>>>'
-
-  # mySymbol  = basegl.symbol myShape
-  # mySymbol.globalVariables.myVar = 100
-  # mySymbol1 = scene.add mySymbol
-  #
-  # return
-
-  #
-  #
-  # myComponent1 = scene.add myComponentDef
-  # myComponent1.position.xy = [0,0]
-  #
-  # myComponent2 = scene.add myComponentDef
-  # myComponent2.position.xy = [0,300]
-  # myComponent2.variables.piotrus = 30
-  #
-  # controls = new Navigator scene
-  #
-  # myComps = group [myComponent1, myComponent2]
-  # myComps.position.x += 100
-  #
-  # # for i in [0..1000]
-  # #   myC = scene.add myComponentDef
-  # #   myC.position.xy = [i * 100,300]
-  # #   myC.variables.piotrus = 30
-  #
-  # # scene.camera.position.z = 10 ## FIXME: czemu nadpisujemy?
-  # # c2 = c.grow(-eye*10) - c ## blad parsowania minusow
-  # # TODO: mouseenter
-  # TODO: post processor
-  #
-  # myComponent2.variables.pointerEvents = 1
-  # myComponent2.style.childrenPointerEvents = POINTER_EVENTS.DISABLED
-  #
-  # makeDraggable myComponent2
-  #
-  #
-  # myComponent2.addEventListener 'mouseover', (e) ->
-  #   console.log "OVER NODE 1!"
-  #
-  # window.navi = controls
-  #
-  #
-  # return
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  controls = new Navigator scene
-
-
+  # Starting out, loading fonts, etc.
   basegl.fontManager.register 'DejaVuSansMono', 'fonts/DejaVuSansMono.ttf'
   await basegl.fontManager.load 'DejaVuSansMono'
 
+  # Creating a new scene and placing it in HTML div
+  scene = basegl.scene {domElement: 'basegl-root'}
+
+  # Adding navigation to scene
+  controls = new Navigator scene
 
 
-
-
-
-
-
+  # Defining shapes
   nodeDef = basegl.symbol nodeShape
   nodeDef.variables.selected = 0
   nodeDef.bbox.xy = [nodew + 2*nodeSelectionBorderMaxSize, nodeh + 2*nodeSelectionBorderMaxSize]
 
-# https://www.shadertoy.com/view/4dsSzs ->
-# https://www.shadertoy.com/view/XssXzs#
-# https://www.shadertoy.com/view/XlcSR4
 
 
   n1 = scene.add nodeDef

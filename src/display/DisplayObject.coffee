@@ -15,12 +15,12 @@ export POINTER_EVENTS =
 
 export styleMixin = -> @style = new DisplayStyle
 export class DisplayStyle extends Composable
-  init: () ->
+  cons: () ->
     @pointerEvents         = POINTER_EVENTS.INHERIT
     @childrenPointerEvents = POINTER_EVENTS.INHERIT
 
 export class DisplayObject extends Composable
-  init: (children) ->
+  cons: (children) ->
     @mixin styleMixin
     @mixin eventDispatcherMixin, children
     @origin   = mat4.create()
@@ -47,7 +47,7 @@ export class DisplayObject extends Composable
 
   onTransformed: () ->
     @updateChildrenOrigin()
-    
+
 export displayObjectMixin = fieldMixin DisplayObject
 
 
