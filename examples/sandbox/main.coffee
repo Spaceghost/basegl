@@ -77,7 +77,7 @@ makeDraggable = (a) ->
   a.addEventListener 'mousedown', (e) ->
     if e.button != 0 then return
     symbol = e.symbol
-    s          = world.activeScene
+    s      = basegl.world.activeScene
     fmove = (e) ->
       symbol.position.x += e.movementX * s.camera.zoomFactor
       symbol.position.y -= e.movementY * s.camera.zoomFactor

@@ -85,9 +85,9 @@ export mergeMut = (a,b) ->
 ### Object configuration ###
 ############################
 
-forNonSpecialMethod = (obj, f) =>
+forNonSelfField = (self, obj, f) =>
   for k in Object.getOwnPropertyNames obj
-    if (k != 'constructor') && (k != 'init') then f k
+    if self[k] == undefined then f k
 
 class Mixin
   constructor: (@cls, @args) ->
@@ -109,8 +109,8 @@ export class Composable
     embedMixin = (mx, fredirect) =>
       obj   = mx.construct()
       proto = Object.getPrototypeOf obj
-      fredirect mkey,obj for mkey in Object.getOwnPropertyNames obj
-      forNonSpecialMethod proto, (mkey) => fredirect mkey,obj
+      forNonSelfField @, obj  , (key) => fredirect key, obj
+      forNonSelfField @, proto, (key) => fredirect key, obj
       obj
 
     discoverEmbedMixins = (f) =>
@@ -203,14 +203,17 @@ export fieldMixin = (cls) =>
 #   cons: (cfg) ->
 #     @mixin c1_mixin, cfg
 #     @configure cfg
+#   c1_foo: () -> 'overriden by CX2'
 #   bar: () -> "bar"
 #
 #
 # cx1 = new CX1
+# console.log '>>>'
 # cx2 = new CX2
 #   c1_p1: 1
 # console.log cx1
 # console.log cx2
 # console.log cx2.c1_p1
+# console.log cx2.c1_foo()
 #
 # throw "end"
