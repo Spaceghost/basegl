@@ -1,7 +1,7 @@
 import {Vector}          from "basegl/math/Vector"
 import {DisplayObject}   from "basegl/display/DisplayObject"
 import {IdxPool}         from 'basegl/lib/container/Pool'
-import {Composition}     from 'basegl/object/Property'
+import {Composable}     from 'basegl/object/Property'
 import * as Reflect      from 'basegl/object/Reflect'
 import * as Property     from 'basegl/object/Property'
 import * as Image        from 'basegl/display/Image'
@@ -139,7 +139,6 @@ export class Symbol
 
   setGlobalVariable: (name, v) ->
     @_globalVariables.set name, v
-    # @material.uniforms[name] = {value: v}
     @material.uniforms[name] = v
 
   defineVariable: (name, def) ->
@@ -171,7 +170,19 @@ export class Symbol
   addToScene: (scene) -> scene.addSymbol @
 
 
-export symbol = Property.consAlias Symbol
+class DOMSymbol extends Composable
+  cons: (@_domElement) ->
+    @obj = new THREE.CSS3DObject @_domElement
+
+  addToScene: (scene) -> scene.addDOMSymbol @
+
+
+
+export symbol = (a) =>
+  if a instanceof HTMLElement
+    new DOMSymbol a
+  else
+    new Symbol a
 
 
 

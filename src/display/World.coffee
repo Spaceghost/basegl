@@ -18,10 +18,11 @@ export class World
   registerOffscreenScene: (s) ->
     @offscreenScenes.add s
 
-  registerScene: (s) ->
-    @scenes.add s
-    s.domElement.addEventListener 'mouseover', (e) => @activeScene = s
-    s.domElement.addEventListener 'mouseout',  (e) => @activeScene = null
+  registerScene: (scene) ->
+    @scenes.add scene
+    if scene.onscreen
+      scene.domElement.addEventListener 'mouseover', (e) => @activeScene = scene
+      scene.domElement.addEventListener 'mouseout',  (e) => @activeScene = null
 
 export world       = Property.consAlias World
 export globalWorld = world()

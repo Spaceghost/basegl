@@ -89,29 +89,30 @@ forNonSelfField = (self, obj, f) =>
   for k in Object.getOwnPropertyNames obj
     if self[k] == undefined then f k
 
-class Mixin
-  constructor: (@cls, @args) ->
-  construct: () -> new @cls @args...
+embedMixin = (self, mx, fredirect) =>
+  proto = Object.getPrototypeOf mx
+  forNonSelfField self, mx   , (key) => fredirect key, mx
+  forNonSelfField self, proto, (key) => fredirect key, mx
+  mx
+
+embedIfMixin = (self,key) =>
+  val = self[key]
+  if val?.__isMixin__
+    self[key] = embedMixin self, val, (subredirect self, key)
+
+subredirect = (self,mk) => (k) =>
+  defineGetter self, k,     -> @[mk][k]
+  defineSetter self, k, (v) -> @[mk][k]=v
 
 export class Composable
   cons: ->
   init: ->
   constructor: (args...) ->
-    subredirect = (mk) => (k) =>
-      defineGetter @, k,     -> @[mk][k]
-      defineSetter @, k, (v) -> @[mk][k]=v
 
     redirectGetter = (k,a,ak) => defineGetter @, k,    ->a[ak]
     redirectSetter = (k,a,ak) => defineSetter @, k, (v)->a[ak]=v
     redirect       = (k,a,ak) => redirectSetter(k,a,ak); redirectSetter(k,a,ak)
     redirectSimple = (k,a)    => redirect(k,a,k)
-
-    embedMixin = (mx, fredirect) =>
-      obj   = mx.construct()
-      proto = Object.getPrototypeOf obj
-      forNonSelfField @, obj  , (key) => fredirect key, obj
-      forNonSelfField @, proto, (key) => fredirect key, obj
-      obj
 
     discoverEmbedMixins = (f) =>
       @__mixins__ = []
@@ -123,12 +124,11 @@ export class Composable
       set
 
     embedMx = discoverEmbedMixins => @cons args...
-    embedMx.forEach (mx) => embedMixin mx, redirectSimple
+    embedMx.forEach (mx) => embedMixin @, mx, redirectSimple
 
     # Handle all keys after initialization
     for key in Object.keys @
-      val = @[key]
-      if val instanceof Mixin then @[key] = embedMixin val, (subredirect key)
+      embedIfMixin @, key
       if (key.startsWith '_') && not(key.startsWith '__')
         redirectGetter key.slice(1), @, key
 
@@ -141,14 +141,17 @@ export class Composable
       else if key.startsWith '_'  then nkey = key.slice 1
       else    nkey = key
       cfgVal = cfg[nkey]
-      if cfgVal? then @[key] = cfgVal
+      if cfgVal?
+        embedIfMixin @, key
+        @[key] = cfgVal
 
   mixin: (cls, args...) ->
-    if cls.prototype.init == undefined
+    if (cls.prototype.cons == undefined) || (cls.prototype.init == undefined)
       cls.call @, args...
     else
-      mx = new Mixin cls, args
+      mx = new cls args...
       @__mixins__.push mx
+      mx.__isMixin__ = true
       mx
 
   mixins: (clss, args...) -> @mixin cls, args... for cls in clss
@@ -159,8 +162,75 @@ export fieldMixin = (cls) =>
   (args...) -> @[fieldName] = @mixin cls, args...
 
 
+#
+# foo = () ->
+#
+# class C1 extends Composable
+#   cons: (cfg) ->
+#     @_c1_id  = 0
+#     @c1_p1   = 'c1_p1'
+#     @_c1_p2  = 'c1_p2'
+#     @__c1_p3 = 'c1_p3'
+#     @configure cfg
+#   c1_foo: () -> "foo"
+#
+# # console.log  C1.prototype.__proto__.constructor.name
+# # console.log foo.prototype.__proto__.constructor.name
+#
+# class C2 extends Composable
+#   cons: (id,cfg) ->
+#     @_c2_id  = id
+#     @c2_p1   = 'c2_p1'
+#     @_c2_p2  = 'c2_p2'
+#     @__c2_p3 = 'c2_p3'
+#     @configure cfg
+#   c2_foo: () -> "foo"
+#
+# class C3 extends Composable
+#   cons: (id,cfg) ->
+#     @_c3_id  = id
+#     @c3_p1   = 'c3_p1'
+#     @_c3_p2  = 'c3_p2'
+#     @__c3_p3 = 'c3_p3'
+#     @configure cfg
+#   c3_foo: () -> "foo"
+#
+# class CX1 extends Composable
+#   cons: (cfg) ->
+#     @c1 = @mixin C1, 1, cfg
+#     @c2 = @mixin C2, 2, cfg
+#     @c3 = @mixin C3, 3, cfg
+#     @configure cfg
+#   bar: () -> "bar"
+#
+#
+# c1_mixin = (cfg) -> @_c1 = @mixin C1, cfg
+#
+# class CX2 extends Composable
+#   cons: (cfg) ->
+#     @mixin c1_mixin, cfg
+#     @configure cfg
+#   c1_foo: () -> 'overriden by CX2'
+#   bar: () -> "bar"
+#
+#
+# c1 = new C1
+#   c1_id: 'overriden!'
+# cx2 = new CX2
+#   c1: c1
+#
+# console.log cx2
+# console.log cx2.c1_id
+#
+#
+#
+# throw "end"
 
-
+#
+#
+#
+# foo = () ->
+#
 # class C1 extends Composable
 #   cons: (id,cfg) ->
 #     @_c1_id  = id
@@ -169,6 +239,9 @@ export fieldMixin = (cls) =>
 #     @__c1_p3 = 'c1_p3'
 #     @configure cfg
 #   c1_foo: () -> "foo"
+#
+# # console.log  C1.prototype.__proto__.constructor.name
+# # console.log foo.prototype.__proto__.constructor.name
 #
 # class C2 extends Composable
 #   cons: (id,cfg) ->
@@ -215,5 +288,7 @@ export fieldMixin = (cls) =>
 # console.log cx2
 # console.log cx2.c1_p1
 # console.log cx2.c1_foo()
+#
+#
 #
 # throw "end"

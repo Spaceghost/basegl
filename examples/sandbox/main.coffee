@@ -121,20 +121,20 @@ deselectAll = (e) =>
 
 
 
-# ### making the div ###
-# div = document.createElement( 'div' );
-# div.style.width = '480px';
-# div.style.height = '360px';
-# div.style.backgroundColor = '#000';
-#
-# xid = 'SJOz3qjfQXU'
-# iframe = document.createElement( 'iframe' );
-# iframe.style.width = '480px';
-# iframe.style.height = '360px';
-# iframe.style.border = '0px';
-# iframe.src = [ 'https://www.youtube.com/embed/', xid, '?rel=0' ].join( '' );
-# div.appendChild( iframe );
-#
+### making the div ###
+div = document.createElement( 'div' );
+div.style.width = '480px';
+div.style.height = '360px';
+div.style.backgroundColor = '#000';
+
+xid = 'SJOz3qjfQXU'
+iframe = document.createElement( 'iframe' );
+iframe.style.width = '480px';
+iframe.style.height = '360px';
+iframe.style.border = '0px';
+iframe.src = [ 'https://www.youtube.com/embed/', xid, '?rel=0' ].join( '' );
+div.appendChild( iframe );
+
 #
 #
 # container = document.getElementById 'basegl-scene-bottom'
@@ -184,6 +184,9 @@ main = () ->
   nodeDef.bbox.xy = [nodew + 2*nodeSelectionBorderMaxSize, nodeh + 2*nodeSelectionBorderMaxSize]
 
 
+  vis1 = basegl.symbol div
+  scene.add vis1
+  console.log vis1
 
   n1 = scene.add nodeDef
   n1.position.xy = [0, 0]

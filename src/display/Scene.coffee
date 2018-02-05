@@ -82,161 +82,242 @@ export class MaterialStore
 #   cons: (cfg) ->
 #     @_width      = 256
 #     @_height     = 256
-#     @_autoUpdate = true
+#     @_autoResize = true
 #     @configure cfg
 #
-#   init: -> if @autoUpdate
+#   init: -> if @autoResize
 #     animationManager.addEveryDrawAnimation @onEveryFrame.bind(@)
 #
 # sceneGeoMixin = fieldMixin SceneGeo
 
 
+#####################
+### SceneGeometry ###
+#####################
 
-export class OffscreenScene extends Composable
+export class SceneGeometry extends Composable
   cons: (cfg) ->
-    @mixin eventDispatcherMixin
-    @_model      = new SceneModel # TODO: make lazy
-    @_camera     = new Camera # TODO: make lazy
-    @_width      = 256
-    @_height     = 256
-    @_autoUpdate = true
+    @_width  = 256
+    @_height = 256
     @configure cfg
 
-    @_canvas   = null
-    @_stats    = null
-    @_renderer = null
+  resize: (w,h) ->
+    @_width  = w
+    @_height = h
+    @onResized()
 
+  onResized: ->
+
+
+
+################
+### SceneDom ###
+################
+
+class SceneDOM extends Composable
+  cons: (cfg) ->
+    @_geometry   = @mixin SceneGeometry, cfg
+    @_domElement = null
+    @_autoResize = true
+    @configure cfg
+
+  @getter 'onscreen',  -> @domElement != null
+  @getter 'offscreen', -> not @onscreen
 
   init: ->
-    # opts = configure {}, cfg,
-    #   start: true
+    if @domElement != null
+      domID = @domElement
+      if typeof @domElement == 'string'
+        @_domElement = document.getElementById domID
+      if not @domElement instanceof HTMLElement
+        msg = "Provided `domElement` is neither a valid DOM ID nor DOM element."
+        raise {msg, domID}
+      if @autoResize
+        animationManager.addEveryDrawAnimation @updateSize.bind(@)
 
-    @_initRenderer()
-    @viewTrough @camera
-    World.globalWorld.registerOffscreenScene @
-    @_beginTime = Date.now()
-    # if opts.start then animationManager.addEveryDrawAnimation @onEveryFrame
+  updateSize: () ->
+    dwidth  = @domElement.clientWidth
+    dheight = @domElement.clientHeight
+    if dwidth != @width || dheight != @height
+      @geometry.resize @domElement.clientWidth, @domElement.clientHeight
 
-  _initRenderer: () ->
-    @_canvas = document.createElementNS 'http://www.w3.org/1999/xhtml', 'canvas'
-    @canvas.width  = @width
-    @canvas.height = @height
-    @canvas.style.display = 'block'
-    @_stats    = new Stats
-    @_renderer = new THREE.WebGLRenderer {antialias: true, alpha:true, canvas:@canvas}
-    @_renderer.setPixelRatio window.devicePixelRatio
-    @_renderer.autoClear = false
+extend = (obj, cfg) =>
+  nobj = Object.assign {}, obj
+  for k,v of cfg
+    nobj[k] = v
+  nobj
 
-  ### API ###
-
-  viewTrough: (camera) ->
-    @_camera = camera
-    @_glCamera = new GLCamera camera, @
-
-  visibleSpace:  () -> [@visibleWidth(), @visibleHeight()]
-  visibleWidth:  () -> @width  * @camera.position.z
-  visibleHeight: () -> @height * @camera.position.z
-
-  update: () -> @_stats.measure () =>
-    @_model.materials.uniforms.zoom       = @camera.position.z
-    @_model.materials.uniforms.time       = Date.now() - @_beginTime
-    @_model.materials.uniforms.drawBuffer = DRAW_BUFFER.NORMAL
-    @_renderer.clear()
-    @_renderer.render @_model._glScene, @_glCamera
-    @_glCamera.update()
-
-  addSymbol: (s) ->
-    def = @model.registerSymbol s
-    def.newInstance()
-
-  add: (a) -> a.addToScene @
-
-  onEveryFrame: () => @update()
+createCanvas = () ->
+  document.createElementNS 'http://www.w3.org/1999/xhtml', 'canvas'
 
 
+
+##################
+### SceneModel ###
+##################
+
+class SceneModel extends Composable
+  cons: (cfg) ->
+    @_model      = new THREE.Scene
+    @_camera     = null # new Camera
+    @_renderer   = null # new THREE.CSS3DRenderer
+    @configure cfg
+
+  @getter 'domElement', -> @renderer.domElement
+
+  setSize: (w,h) -> @renderer.setSize w,h
+
+  render: (args...) ->
+    @renderer.render @model, @camera.__glCamera, args...
+
+
+
+#############
+### Scene ###
+#############
 
 export class Scene extends Composable
-  cons: (cfg) ->
-    @_domElement = null
-    @_offscreen  = @mixin OffscreenScene, cfg
-    @configure cfg
 
-  init: ->
-    @_initDOM()
-    @_initMouseSupport()
-    @_initDebug()
-    @updateSize()
+  ### Initialization ###
+
+  cons: (cfg) ->
+    @mixin eventDispatcherMixin
+    @_dom            = @mixin SceneDOM, cfg
+    @_autoUpdate     = true
+    @_camera         = new Camera
+    modeCfg          = extend cfg, {camera: @_camera}
+    @_symbolModel    = new SceneModel modeCfg
+    @_domModel       = new SceneModel modeCfg
+    @_symbolRegistry = new SymbolRegistry @_symbolModel.model
+    @configure cfg
+    @_creationTime   = Date.now()
+
+    @initSymbolPointerBuffers()
+    @initMouseBuffers()
     @_idScreenshotRequests = []
 
-    if @autoUpdate
-      animationManager.addEveryDrawAnimation @onEveryFrame.bind(@)
+    @_stats = new Stats
+
+
+  init: ->
+    #TODO: make mixin initialization postponed to this moment!
+    @symbolModel._renderer = @initWebGLRenderer()
+    @domModel._renderer    = @initDomRenderer()
+    @camera.adjustToScene @
     World.globalWorld.registerScene @
+    @geometry.onResized = @onResized.bind(@)
+    @geometry.onResized()
+    if @onscreen
+      @initSymbolPointerBuffers()
+      @initMouseListeners()
+      @_initDOM()
+      @_initDebug()
+
+    if @autoUpdate
+      animationManager.addEveryDrawAnimation @update.bind(@)
+
+  initWebGLRenderer: ->
+    canvas               = createCanvas()
+    canvas.width         = @width
+    canvas.height        = @height
+    canvas.style.display = 'block'
+    renderer = new THREE.WebGLRenderer
+      antialias : true
+      alpha     : true
+      canvas    : canvas
+    renderer.setPixelRatio window.devicePixelRatio
+    renderer.autoClear = false
+    renderer
 
   _initDOM: () ->
-    domID = @domElement
-    if typeof @domElement == 'string' then @_domElement = document.getElementById domID
-    if not @domElement instanceof HTMLElement
-      raise {"Provided `domElement` is neither a valid DOM ID nor DOM element.", domID}
-    @domElement.appendChild @canvas
+    @domElement.appendChild @symbolModel._renderer.domElement # TODO refactor
     @domElement.appendChild @stats.domElement
-
-  _initMouseSupport: () ->
-    @_mouseIDBuffer      = new Float32Array 4
-    @_lastTarget         = new SymbolTarget
-    @_lastTarget.element = @
-    @screenMouse         = new THREE.Vector2
-    @mouse               = new THREE.Vector2
-    @_mouseBaseEvent     = null
-    @domElement.addEventListener 'mousedown', (e) => @_lastTarget.dispatchEvent e
-    @domElement.addEventListener 'mouseup'  , (e) => @_lastTarget.dispatchEvent e
-    @domElement.addEventListener 'click'    , (e) => @_lastTarget.dispatchEvent e
-    @domElement.addEventListener 'dblclick' , (e) => @_lastTarget.dispatchEvent e
-    @domElement.addEventListener 'mousemove', (e) =>
-      @screenMouse.x = e.clientX
-      @screenMouse.y = e.clientY
-      @mouse.x = (@screenMouse.x-@width/2 ) * @_camera.position.z + @_camera.position.x
-      @mouse.y = (@screenMouse.y-@height/2) * @_camera.position.z - @_camera.position.y
-      @_mouseBaseEvent = e
-
-  _initIDRecognition: () ->
-    @_idTarget = new THREE.WebGLRenderTarget @width, @height, {type: THREE.FloatType, minFilter: THREE.NearestFilter, magFilter: THREE.NearestFilter, format: THREE.RGBAFormat}
-    @_idBuffer = new Float32Array (4*@width*@height)
 
   _initDebug: () ->
     @addEventListener 'keydown', (event) =>
       trigger = event.altKey && event.ctrlKey
       if not trigger then return
       if (event.key >= '0') && (event.key <= '9')
-        @_model.materials.uniforms.displayMode = parseInt(event.key)
+        @_symbolRegistry.materials.uniforms.displayMode = parseInt(event.key)
     #   else if (event.key == '`')
     #     Debug.getInspector().toggle()
 
+  initDomRenderer  : -> new THREE.CSS3DRenderer
+  initSymbolPointerBuffers : ->
+    @_idBuffer = new Float32Array (4*@width*@height)
+    @_idTarget = new THREE.WebGLRenderTarget @width, @height,
+      type      : THREE.FloatType
+      minFilter : THREE.NearestFilter
+      magFilter : THREE.NearestFilter
+      format    : THREE.RGBAFormat
 
-  ### API ###
+   initMouseBuffers: () ->
+     @_mouseIDBuffer      = new Float32Array 4
+     @_lastTarget         = new SymbolTarget
+     @_lastTarget.element = @
+     @_screenMouse        = new THREE.Vector2
+     @_mouse              = new THREE.Vector2
+     @_mouseBaseEvent     = null
 
-  updateSize: () ->
-    dwidth  = @domElement.clientWidth
-    dheight = @domElement.clientHeight
-    if dwidth != @width || dheight != @height
-      @_width  = @domElement.clientWidth
-      @_height = @domElement.clientHeight
-      @offscreen._renderer.setSize @width, @height
-      @offscreen._glCamera.onSceneSizeChange()
-      @_initIDRecognition()
+  initMouseListeners: () ->
+    @domElement.addEventListener 'mousedown', (e) => @lastTarget.dispatchEvent e
+    @domElement.addEventListener 'mouseup'  , (e) => @lastTarget.dispatchEvent e
+    @domElement.addEventListener 'click'    , (e) => @lastTarget.dispatchEvent e
+    @domElement.addEventListener 'dblclick' , (e) => @lastTarget.dispatchEvent e
+    @domElement.addEventListener 'mousemove', (e) =>
+      @screenMouse.x = e.clientX
+      @screenMouse.y = e.clientY
+      campos = @camera.position
+      @mouse.x = (@screenMouse.x-@width/2 ) * campos.z + campos.x
+      @mouse.y = (@screenMouse.y-@height/2) * campos.z - campos.y
+      @_mouseBaseEvent = e
 
-  onEveryFrame: () => @update()
 
-  update: () -> @_stats.measure () =>
-    @updateSize()
-    @offscreen.update()
+  ### Callbacks ###
 
-    @model.materials.uniforms.drawBuffer = DRAW_BUFFER.ID
-    @offscreen._renderer.render @model._glScene, @offscreen._glCamera, @_idTarget, true
-    @offscreen._renderer.readRenderTargetPixels @_idTarget, @screenMouse.x, @_idTarget.height - @screenMouse.y, 1, 1, @_mouseIDBuffer
-    if @_idScreenshotRequests.length > 0
-      @offscreen._renderer.readRenderTargetPixels @_idTarget, 0,0,@width,@height, @_idBuffer
-      for request in @_idScreenshotRequests
-        request @_idBuffer
+  onResized: () ->
+    @initSymbolPointerBuffers()
+    @symbolModel . setSize @width, @height
+    @domModel    . setSize @width, @height
+    @camera.adjustToScene @
+
+  requestIDScreenshot: (callback) ->
+    @idScreenshotRequests.push callback
+
+
+  ### Utils ###
+
+  visibleSpace  : -> [@visibleWidth(), @visibleHeight()]
+  visibleWidth  : -> @width  * @camera.position.z
+  visibleHeight : -> @height * @camera.position.z
+
+  add: (a) -> a.addToScene @
+  addSymbol: (s) ->
+    def = @symbolRegistry.registerSymbol s
+    def.newInstance()
+
+  addDOMSymbol: (s) ->
+    @domModel.model.add s.obj
+
+  update: -> @_stats.measure =>
+    @camera.update @
+    @symbolRegistry.materials.uniforms.zoom       = @camera.position.z
+    @symbolRegistry.materials.uniforms.time       = Date.now() - @_beginTime
+    @symbolRegistry.materials.uniforms.drawBuffer = DRAW_BUFFER.NORMAL
+    @symbolModel.render()
+    @domModel.render()
+    if @onscreen then @handleMouse()
+
+  handleMouse: ->
+    @symbolRegistry.materials.uniforms.drawBuffer = DRAW_BUFFER.ID
+    @symbolModel.render @idTarget, true
+    @symbolModel.renderer.readRenderTargetPixels @idTarget, @screenMouse.x,
+      @idTarget.height - @screenMouse.y, 1, 1, @_mouseIDBuffer
+    if @idScreenshotRequests.length > 0
+      @symbolModel.renderer.readRenderTargetPixels @idTarget, 0,0, @width,
+        @height, @idBuffer
+      for request in @idScreenshotRequests
+        request @idBuffer
       @_idScreenshotRequests = []
 
     symbolFamilyID = @_mouseIDBuffer[0]
@@ -251,22 +332,25 @@ export class Scene extends Composable
         target = new SymbolTarget targetPath
         target.element = @
       else
-        family         = @_model.lookupSymbolFamily symbolFamilyID
-        if not family then return # when resizing screen sometimes sampled pixels have wrong value!
-        symbol      = family.lookupSymbol symbolID
+        family         = @_symbolRegistry.lookupSymbolFamily symbolFamilyID
+        if not family then return # wrong results when resizing scene!
+        symbol         = family.lookupSymbol symbolID
         shapeDef       = family.definition.shape
         shapeDefTarget = symbol.lookupShapeDef shapeID
-        target         = new SymbolTarget targetPath, symbol, shapeDef, shapeDefTarget
+        target         = new SymbolTarget targetPath, symbol,
+                                          shapeDef, shapeDefTarget
         target.element = target.discoverPointerEventTarget()
 
       ## Dispatching events
-      targetChanged    = target.element != @_lastTarget.element
-      symbolChanged = (not (target.path.compareSymbol @_lastTarget.path)) && (target.element.type == Shape)
+      targetChanged = target.element != @_lastTarget.element
+      symbolChanged = (not (target.path.compareSymbol @_lastTarget.path)) &&
+                      (target.element.type == Shape)
       if targetChanged || symbolChanged
-        overEvent  = new MouseEvent 'mouseover' , @_mouseBaseEvent
-        outEvent   = new MouseEvent 'mouseout'  , @_mouseBaseEvent
-        enterEvent = disableBubbling (new MouseEvent 'mouseenter', @_mouseBaseEvent)
-        leaveEvent = disableBubbling (new MouseEvent 'mouseleave', @_mouseBaseEvent)
+        mkMouseEvent = (name) => new MouseEvent name, @_mouseBaseEvent
+        overEvent  = mkMouseEvent 'mouseover'
+        outEvent   = mkMouseEvent 'mouseout'
+        enterEvent = disableBubbling (mkMouseEvent 'mouseenter')
+        leaveEvent = disableBubbling (mkMouseEvent 'mouseleave')
         @_lastTarget.dispatchEvent outEvent
         @_lastTarget.dispatchEvent leaveEvent
         target.dispatchEvent overEvent
@@ -274,23 +358,14 @@ export class Scene extends Composable
         @_lastTarget = target
 
 
-  requestIDScreenshot: (callback) ->
-    @_idScreenshotRequests.push callback
+export scene = Property.consAlias Scene
 
 
 
-
-
-export scene = (cfg) ->
-  if (typeof cfg) == 'string' then cfg = {domElement: cfg}
-  if cfg?.domElement? then new Scene cfg else new OffscreenScene cfg
-
-
-
-export class SceneModel extends DisplayObject
-  constructor: () ->
+export class SymbolRegistry extends DisplayObject
+  constructor: (model) ->
     super()
-    @_glScene            = new THREE.Scene
+    @_model              = model
     @materials           = new MaterialStore
     @_symbolFamilyDefMap = new Map
     @_symbolFamilyIDMap  = new Map
@@ -306,7 +381,7 @@ export class SceneModel extends DisplayObject
       @_symbolFamilyDefMap.set comp, family
       @_symbolFamilyIDMap.set  id  , family
       @materials.add comp.material
-      @_glScene.add  family._mesh
+      @_model.add  family._mesh
     family
 
   lookupSymbolFamily: (id) -> @_symbolFamilyIDMap.get id

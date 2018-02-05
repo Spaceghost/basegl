@@ -219,7 +219,7 @@ class Atlas extends Composable
       width      : @_size
       height     : @_size
 
-    @_texture = new THREE.CanvasTexture @_scene.canvas
+    @_texture = new THREE.CanvasTexture @_scene.symbolModel.domElement
 
     @ready = loadFont(@_fontFamily).then (font) =>
       @_font = font
