@@ -12,9 +12,12 @@ import * as World from 'basegl/display/World'
 import * as Color from 'basegl/display/Color'
 import * as Debug from 'basegl/debug/GLInspector'
 import * as Property    from 'basegl/object/Property'
-import {define, mixin, configure, configureLazy, params, lazy, configure2, Composition, Composable} from 'basegl/object/Property'
+import {define, mixin, configure, configureLazy, params, lazy, configure2, Composition, Composable, fieldMixin} from 'basegl/object/Property'
 
 import {EventDispatcher, eventDispatcherMixin} from 'basegl/event/EventDispatcher'
+
+require('three/CSS3DRenderer')
+
 
 unsafeWithReparented = (a, newParent, f) ->
   oldParent = a._parent
@@ -75,6 +78,19 @@ export class MaterialStore
 
 
 
+# export class SceneGeo extends Composable
+#   cons: (cfg) ->
+#     @_width      = 256
+#     @_height     = 256
+#     @_autoUpdate = true
+#     @configure cfg
+#
+#   init: -> if @autoUpdate
+#     animationManager.addEveryDrawAnimation @onEveryFrame.bind(@)
+#
+# sceneGeoMixin = fieldMixin SceneGeo
+
+
 
 export class OffscreenScene extends Composable
   cons: (cfg) ->
@@ -86,8 +102,10 @@ export class OffscreenScene extends Composable
     @_autoUpdate = true
     @configure cfg
 
-    @_canvas = null
-    @_stats  = null
+    @_canvas   = null
+    @_stats    = null
+    @_renderer = null
+
 
   init: ->
     # opts = configure {}, cfg,

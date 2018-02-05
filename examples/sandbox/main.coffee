@@ -19,6 +19,7 @@ import {animationManager} from 'basegl/animation/Manager'
 
 
 
+
 #######################
 ### Node Definition ###
 #######################
@@ -112,8 +113,57 @@ makeSelectable = (a) ->
     selectedComponent = symbol
     selectedComponent.variables.zIndex = -10
 
+deselectAll = (e) =>
+  if e.button != 0 then return
+  if selectedComponent
+    applySelectAnimation selectedComponent, true
+    selectedComponent = null
 
 
+
+# ### making the div ###
+# div = document.createElement( 'div' );
+# div.style.width = '480px';
+# div.style.height = '360px';
+# div.style.backgroundColor = '#000';
+#
+# xid = 'SJOz3qjfQXU'
+# iframe = document.createElement( 'iframe' );
+# iframe.style.width = '480px';
+# iframe.style.height = '360px';
+# iframe.style.border = '0px';
+# iframe.src = [ 'https://www.youtube.com/embed/', xid, '?rel=0' ].join( '' );
+# div.appendChild( iframe );
+#
+#
+#
+# container = document.getElementById 'basegl-scene-bottom'
+#
+# camera = new THREE.PerspectiveCamera( 50, window.innerWidth / window.innerHeight, 1, 5000 );
+# camera.position.set( 500, 350, 750 );
+#
+# scene = new THREE.Scene()
+#
+# renderer = new THREE.CSS3DRenderer();
+# renderer.setSize( window.innerWidth, window.innerHeight );
+# renderer.domElement.style.position = 'absolute';
+# renderer.domElement.style.top = 0;
+# container.appendChild( renderer.domElement );
+#
+#
+#
+#
+# object = new THREE.CSS3DObject( div );
+# object.position.set( 400,200,0 );
+# object.rotation.y = 0;
+#
+# scene.add object
+#
+# animate = () ->
+#   renderer.render( scene, camera );
+#   requestAnimationFrame( animate );
+#
+# animate()
 
 main = () ->
 
@@ -122,7 +172,7 @@ main = () ->
   await basegl.fontManager.load 'DejaVuSansMono'
 
   # Creating a new scene and placing it in HTML div
-  scene = basegl.scene {domElement: 'basegl-root'}
+  scene = basegl.scene {domElement: 'basegl-scene-main'}
 
   # Adding navigation to scene
   controls = new Navigator scene
@@ -152,6 +202,7 @@ main = () ->
     fontFamily: 'DejaVuSansMono'
 
   txt1 = scene.add txtDef
+
 
   # str = 'The quick brown fox \njumps over the lazy dog'
   # txt = atlas.addText scene, str
@@ -194,6 +245,9 @@ main = () ->
   makeSelectable n1
   makeSelectable n2
   makeSelectable n3
+
+  scene.addEventListener 'mousedown', (e) -> deselectAll e
+
 
   # g1 = group [n1,n2,n3]
   # g1.position.x += 0
