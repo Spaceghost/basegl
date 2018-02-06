@@ -134,10 +134,14 @@ class SceneDOM extends Composable
         raise {msg, domID}
       @refreshSize()
       if @autoResize
-        resizeObserver = new ResizeObserver ([r]) =>
-          console.log r
-          @geometry.resize r.contentRect.width, r.contentRect.height
-        resizeObserver.observe @domElement
+        # TODO: SLOW! Unless we've got pure Electtron app with flags access
+        # we use this. After enabling chrome://flags/#enable-experimental-web-platform-features
+        # switch to the commented code
+        animationManager.addEveryDrawAnimation @updateSizeSLOW.bind(@)
+        # resizeObserver = new ResizeObserver ([r]) =>
+        #   console.log r
+        #   @geometry.resize r.contentRect.width, r.contentRect.height
+        # resizeObserver.observe @domElement
 
       @domElement.style.display = 'flex'
 
@@ -160,6 +164,14 @@ class SceneDOM extends Composable
 
   refreshSize: () ->
     @geometry.resize @domElement.clientWidth, @domElement.clientHeight
+
+
+  #FIXME: read note in usage place
+  updateSizeSLOW: () ->
+    dwidth  = @domElement.clientWidth
+    dheight = @domElement.clientHeight
+    if dwidth != @width || dheight != @height
+      @geometry.resize @domElement.clientWidth, @domElement.clientHeight
 
   disableDOMLayerPointerEvents: () -> @domLayer.style.pointerEvents = 'none'
   enableDOMLayerPointerEvents : () -> @domLayer.style.pointerEvents = 'auto'

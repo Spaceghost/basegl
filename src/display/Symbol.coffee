@@ -178,8 +178,7 @@ class DOMSymbol
   addToScene: (scene) -> scene.addDOMSymbol @
 
   newInstance: () ->
-    #TODO: copy domElement
-    new DOMSymbolInstance @domElement
+    new DOMSymbolInstance @domElement.cloneNode()
 
 
 class DOMSymbolInstance extends DisplayObject
