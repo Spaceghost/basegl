@@ -77,11 +77,10 @@ nodeShape = basegl.expr ->
 makeDraggable = (a) ->
   a.addEventListener 'mousedown', (e) ->
     if e.button != 0 then return
-    symbol = e.symbol
-    s      = basegl.world.activeScene
+    s = basegl.world.activeScene
     fmove = (e) ->
-      symbol.position.x += e.movementX * s.camera.zoomFactor
-      symbol.position.y -= e.movementY * s.camera.zoomFactor
+      a.position.x += e.movementX * s.camera.zoomFactor
+      a.position.y -= e.movementY * s.camera.zoomFactor
     window.addEventListener 'mousemove', fmove
     window.addEventListener 'mouseup', () =>
       window.removeEventListener 'mousemove', fmove
@@ -123,8 +122,8 @@ deselectAll = (e) =>
 
 ### making the div ###
 div = document.createElement( 'div' );
-div.style.width = '480px';
-div.style.height = '360px';
+div.style.width = nodew + 'px';
+div.style.height = '200px';
 div.style.backgroundColor = '#FF0000';
 div.id = 'examplebutton'
 
@@ -185,9 +184,10 @@ main = () ->
   nodeDef.bbox.xy = [nodew + 2*nodeSelectionBorderMaxSize, nodeh + 2*nodeSelectionBorderMaxSize]
 
 
-  vis1 = basegl.symbol div
-  scene.add vis1
-  console.log vis1
+  vis = basegl.symbol div
+  vis1 = scene.add vis
+  vis1.position.x = nodew/2 + nodeSelectionBorderMaxSize
+  vis1.position.y = -80
 
   n1 = scene.add nodeDef
   n1.position.xy = [0, 0]
@@ -198,7 +198,7 @@ main = () ->
   n2.position.xy = [200, 0]
   n2.id = 2
 
-  nn1 = group [n1,n2]
+  nn1 = group [n1,vis1]
   console.log nn1
   n3 = scene.add nodeDef
   n3.position.xy = [400, 0]
@@ -245,7 +245,7 @@ main = () ->
 
   n1.style.childrenPointerEvents = POINTER_EVENTS.DISABLED
 
-  makeDraggable n1
+  makeDraggable nn1
   makeDraggable n2
   makeDraggable n3
 

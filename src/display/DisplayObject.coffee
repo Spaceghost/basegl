@@ -22,7 +22,7 @@ export class DisplayStyle extends Composable
 export class DisplayObject extends Composable
   cons: (children) ->
     @mixin styleMixin
-    @mixin eventDispatcherMixin, children
+    @mixin eventDispatcherMixin, @, children
     @origin   = mat4.create()
     @xform    = mat4.create()
     @position = new Vector [0,0,0], @onTransformed.bind @

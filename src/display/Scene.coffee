@@ -14,7 +14,7 @@ import * as Debug from 'basegl/debug/GLInspector'
 import * as Property    from 'basegl/object/Property'
 import {define, mixin, configure, configureLazy, params, lazy, configure2, Composition, Composable, fieldMixin, extend} from 'basegl/object/Property'
 
-import {EventDispatcher, eventDispatcherMixin} from 'basegl/event/EventDispatcher'
+import {eventDispatcherMixin} from 'basegl/event/EventDispatcher'
 
 require('three/CSS3DRenderer')
 
@@ -49,7 +49,6 @@ export class SymbolTarget
       enabled = true
       test = (a) ->
         result = null
-        console.log '>>>', a
         switch a.style.pointerEvents
           when POINTER_EVENTS.INHERIT  then result = enabled
           when POINTER_EVENTS.ENABLED  then result = true
@@ -200,7 +199,7 @@ export class Scene extends Composable
   ### Initialization ###
 
   cons: (cfg) ->
-    @mixin eventDispatcherMixin
+    @mixin eventDispatcherMixin, @
     @_dom            = @mixin SceneDOM, cfg
     @_autoUpdate     = true
     @_camera         = new Camera
@@ -321,7 +320,9 @@ export class Scene extends Composable
     def.newInstance()
 
   addDOMSymbol: (s) ->
-    @domModel.model.add s.obj
+    inst = s.newInstance()
+    @domModel.model.add inst.obj
+    inst
 
   update: -> @_stats.measure =>
     @camera.update @

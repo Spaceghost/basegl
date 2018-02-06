@@ -170,18 +170,35 @@ export class Symbol
   addToScene: (scene) -> scene.addSymbol @
 
 
-class DOMSymbol extends DisplayObject
-  constructor: (@_domElement) ->
-    super()
-    @obj = new THREE.CSS3DObject @_domElement
+
+
+class DOMSymbol
+  constructor: (@domElement) ->
 
   addToScene: (scene) -> scene.addDOMSymbol @
 
+  newInstance: () ->
+    #TODO: copy domElement
+    new DOMSymbolInstance @domElement
+
+
+class DOMSymbolInstance extends DisplayObject
+  constructor: (@domElement) ->
+    super()
+    @obj = new THREE.CSS3DObject @domElement
+    @obj.matrixAutoUpdate = false
+
+
+  setOrigin: (args...) ->
+    super.setOrigin args...
+    @_updatePosition()
+
   onTransformed: () ->
     super.onTransformed()
-    @obj.position.x = @position.x
-    @obj.position.y = @position.y
-    @obj.position.z = @position.z
+    @_updatePosition()
+
+  _updatePosition: () -> @obj.matrix.fromArray @xform
+
 
 
 

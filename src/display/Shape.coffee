@@ -189,7 +189,8 @@ protoBindCons = (t) -> protoBind (consAlias t)
 
 export class Shape extends Composable
   cons: () ->
-    @mixins [styleMixin, eventDispatcherMixin]
+    @mixin styleMixin
+    @mixin eventDispatcherMixin, @
     @type  = Shape
     @_bbox = new BBox (glslBBRef @, 0), (glslBBRef @, 1), (glslBBRef @, 2), (glslBBRef @, 3)
 
