@@ -49,6 +49,7 @@ export class SymbolTarget
       enabled = true
       test = (a) ->
         result = null
+        console.log '>>>', a
         switch a.style.pointerEvents
           when POINTER_EVENTS.INHERIT  then result = enabled
           when POINTER_EVENTS.ENABLED  then result = true

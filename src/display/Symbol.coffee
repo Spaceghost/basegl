@@ -69,6 +69,7 @@ export typedValue = Property.consAlias TypedValue
 export int   = (args...) -> typedValue 'int'   , args...
 export float = (args...) -> typedValue 'float' , args...
 
+
 export class Symbol
   constructor: (@shape) ->
     @bbox              = new Vector [512,512]
@@ -81,7 +82,6 @@ export class Symbol
     @_initMaterial()
     @_recomputeShader()
     @_initDefaultVariables()
-
 
   ### Initialization ###
 
@@ -170,19 +170,23 @@ export class Symbol
   addToScene: (scene) -> scene.addSymbol @
 
 
-class DOMSymbol extends Composable
-  cons: (@_domElement) ->
+class DOMSymbol extends DisplayObject
+  constructor: (@_domElement) ->
+    super()
     @obj = new THREE.CSS3DObject @_domElement
 
   addToScene: (scene) -> scene.addDOMSymbol @
 
+  onTransformed: () ->
+    super.onTransformed()
+    @obj.position.x = @position.x
+    @obj.position.y = @position.y
+    @obj.position.z = @position.z
+
 
 
 export symbol = (a) =>
-  if a instanceof HTMLElement
-    new DOMSymbol a
-  else
-    new Symbol a
+  if a instanceof HTMLElement then new DOMSymbol a else new Symbol a
 
 
 

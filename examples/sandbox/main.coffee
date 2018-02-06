@@ -193,10 +193,13 @@ main = () ->
   n1.position.xy = [0, 0]
   n1.id = 1
 
+
   n2 = scene.add nodeDef
   n2.position.xy = [200, 0]
   n2.id = 2
 
+  nn1 = group [n1,n2]
+  console.log nn1
   n3 = scene.add nodeDef
   n3.position.xy = [400, 0]
   n3.id = 3

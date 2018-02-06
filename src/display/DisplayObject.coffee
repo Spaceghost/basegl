@@ -13,7 +13,7 @@ export POINTER_EVENTS =
   ENABLED:  "enabled"  # enable  for this element and its children
   DISABLED: "disabled" # disable for this element and its children
 
-export styleMixin = -> @style = new DisplayStyle
+export styleMixin = -> @style = @mixin DisplayStyle
 export class DisplayStyle extends Composable
   cons: () ->
     @pointerEvents         = POINTER_EVENTS.INHERIT
@@ -51,8 +51,4 @@ export class DisplayObject extends Composable
 export displayObjectMixin = fieldMixin DisplayObject
 
 
-export group = (elems) ->
-  g = new DisplayObject()
-  for el in elems
-    g.addChild el
-  g
+export group = (elems) -> new DisplayObject elems
