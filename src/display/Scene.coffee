@@ -12,7 +12,7 @@ import * as World from 'basegl/display/World'
 import * as Color from 'basegl/display/Color'
 import * as Debug from 'basegl/debug/GLInspector'
 import * as Property    from 'basegl/object/Property'
-import {define, mixin, configure, configureLazy, params, lazy, configure2, Composition, Composable, fieldMixin} from 'basegl/object/Property'
+import {define, mixin, configure, configureLazy, params, lazy, configure2, Composition, Composable, fieldMixin, extend} from 'basegl/object/Property'
 
 import {EventDispatcher, eventDispatcherMixin} from 'basegl/event/EventDispatcher'
 
@@ -132,20 +132,38 @@ class SceneDOM extends Composable
       if not @domElement instanceof HTMLElement
         msg = "Provided `domElement` is neither a valid DOM ID nor DOM element."
         raise {msg, domID}
+      @refreshSize()
       if @autoResize
-        animationManager.addEveryDrawAnimation @updateSize.bind(@)
+        resizeObserver = new ResizeObserver ([r]) =>
+          console.log r
+          @geometry.resize r.contentRect.width, r.contentRect.height
+        resizeObserver.observe @domElement
 
-  updateSize: () ->
-    dwidth  = @domElement.clientWidth
-    dheight = @domElement.clientHeight
-    if dwidth != @width || dheight != @height
-      @geometry.resize @domElement.clientWidth, @domElement.clientHeight
+      @domElement.style.display = 'flex'
 
-extend = (obj, cfg) =>
-  nobj = Object.assign {}, obj
-  for k,v of cfg
-    nobj[k] = v
-  nobj
+      mkLayer = (name) =>
+        layer = document.createElement 'div'
+        layer.style.position = 'absolute'
+        layer.style.margin   = 0
+        layer.style.width    = '100%'
+        layer.style.height   = '100%'
+        layer.id = @domElement.id + '-layer-' + name
+        @domElement.appendChild layer
+        layer
+
+      @domLayer   = mkLayer 'dom'
+      @glLayer    = mkLayer 'gl'
+      @statsLayer = mkLayer 'stats'
+
+      @glLayer    . style.pointerEvents = 'none'
+      @statsLayer . style.pointerEvents = 'none'
+
+  refreshSize: () ->
+    @geometry.resize @domElement.clientWidth, @domElement.clientHeight
+
+  disableDOMLayerPointerEvents: () -> @domLayer.style.pointerEvents = 'none'
+  enableDOMLayerPointerEvents : () -> @domLayer.style.pointerEvents = 'auto'
+
 
 createCanvas = () ->
   document.createElementNS 'http://www.w3.org/1999/xhtml', 'canvas'
@@ -159,8 +177,8 @@ createCanvas = () ->
 class SceneModel extends Composable
   cons: (cfg) ->
     @_model      = new THREE.Scene
-    @_camera     = null # new Camera
-    @_renderer   = null # new THREE.CSS3DRenderer
+    @_camera     = null
+    @_renderer   = null
     @configure cfg
 
   @getter 'domElement', -> @renderer.domElement
@@ -230,8 +248,9 @@ export class Scene extends Composable
     renderer
 
   _initDOM: () ->
-    @domElement.appendChild @symbolModel._renderer.domElement # TODO refactor
-    @domElement.appendChild @stats.domElement
+    @dom.glLayer    . appendChild @symbolModel.renderer.domElement
+    @dom.domLayer   . appendChild @domModel.renderer.domElement
+    @dom.statsLayer . appendChild @stats.domElement
 
   _initDebug: () ->
     @addEventListener 'keydown', (event) =>
@@ -260,11 +279,15 @@ export class Scene extends Composable
      @_mouseBaseEvent     = null
 
   initMouseListeners: () ->
-    @domElement.addEventListener 'mousedown', (e) => @lastTarget.dispatchEvent e
-    @domElement.addEventListener 'mouseup'  , (e) => @lastTarget.dispatchEvent e
-    @domElement.addEventListener 'click'    , (e) => @lastTarget.dispatchEvent e
-    @domElement.addEventListener 'dblclick' , (e) => @lastTarget.dispatchEvent e
-    @domElement.addEventListener 'mousemove', (e) =>
+    addCaptureListener = (name, f) =>
+      @domElement.addEventListener name, f, true
+    redirectCaptureListener = (name) =>
+      addCaptureListener name, (e) => @lastTarget.dispatchEvent e
+    redirectCaptureListener 'mousedown'
+    redirectCaptureListener 'mouseup'
+    redirectCaptureListener 'click'
+    redirectCaptureListener 'dblclick'
+    addCaptureListener      'mousemove', (e) =>
       @screenMouse.x = e.clientX
       @screenMouse.y = e.clientY
       campos = @camera.position
@@ -329,9 +352,11 @@ export class Scene extends Composable
     if not (@_lastTarget.path.compare targetPath)
       target = null
       if (shapeID == 0)
+        @enableDOMLayerPointerEvents()
         target = new SymbolTarget targetPath
         target.element = @
       else
+        @disableDOMLayerPointerEvents()
         family         = @_symbolRegistry.lookupSymbolFamily symbolFamilyID
         if not family then return # wrong results when resizing scene!
         symbol         = family.lookupSymbol symbolID

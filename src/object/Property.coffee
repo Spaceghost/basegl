@@ -162,6 +162,15 @@ export fieldMixin = (cls) =>
   (args...) -> @[fieldName] = @mixin cls, args...
 
 
+
+# Extending the config with additional config
+export extend = (obj, cfg) =>
+  nobj = Object.assign {}, obj
+  for k,v of cfg
+    nobj[k] = v
+  nobj
+
+
 #
 # foo = () ->
 #

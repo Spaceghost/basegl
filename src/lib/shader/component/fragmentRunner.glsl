@@ -6,7 +6,7 @@ void main() {
   int       sid   = shape.id;
   float     alpha = sdf_render(shape.density);
 
-  float idMask              = sid == 0 ? 0.0 : 1.0;
+  float idMask           = (shape.cd.a * float(sid)) > 0. ? 1. : 0.;
   float symbolFamilyID_r = float(floor(symbolFamilyID + 0.5));
   float symbolID_r       = float(floor(symbolID + 0.5));
 
@@ -42,5 +42,4 @@ void main() {
       }
   }
   // gl_FragColor = vec4(luv.x, luv.y, 0.0, 1.0);
-  // gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
 }

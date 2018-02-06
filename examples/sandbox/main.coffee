@@ -125,15 +125,16 @@ deselectAll = (e) =>
 div = document.createElement( 'div' );
 div.style.width = '480px';
 div.style.height = '360px';
-div.style.backgroundColor = '#000';
+div.style.backgroundColor = '#FF0000';
+div.id = 'examplebutton'
 
 xid = 'SJOz3qjfQXU'
 iframe = document.createElement( 'iframe' );
 iframe.style.width = '480px';
 iframe.style.height = '360px';
 iframe.style.border = '0px';
-iframe.src = [ 'https://www.youtube.com/embed/', xid, '?rel=0' ].join( '' );
-div.appendChild( iframe );
+iframe.src = [ "http://www.weather.gov/" ].join( '' );
+# div.appendChild( iframe );
 
 #
 #
@@ -172,7 +173,7 @@ main = () ->
   await basegl.fontManager.load 'DejaVuSansMono'
 
   # Creating a new scene and placing it in HTML div
-  scene = basegl.scene {domElement: 'basegl-scene-main'}
+  scene = basegl.scene {domElement: 'scene'}
 
   # Adding navigation to scene
   controls = new Navigator scene
