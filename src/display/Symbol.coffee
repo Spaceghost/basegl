@@ -1,7 +1,7 @@
 import {Vector}          from "basegl/math/Vector"
 import {DisplayObject}   from "basegl/display/DisplayObject"
 import {IdxPool}         from 'basegl/lib/container/Pool'
-import {Composable}     from 'basegl/object/Property'
+import {Composable}      from 'basegl/object/Property'
 import * as Reflect      from 'basegl/object/Reflect'
 import * as Property     from 'basegl/object/Property'
 import * as Image        from 'basegl/display/Image'
@@ -256,7 +256,11 @@ export class SymbolGeometry
     @attributes[vname].setDynamic true
     @geometry.addAttribute vname, attribute
 
-  setSize:     (id, vals) -> @setBufferVal id, "dim"    , vals
+  setSize: (id, vals) -> @setBufferVal id, "dim", vals
+
+  dispose: (id) ->
+    @_symbolIDPool.dispose id
+    @setSize id, [0,0]
 
   reserveID: () ->
     # FIXME: handle reshaping
@@ -301,6 +305,9 @@ export class SymbolInstance extends DisplayObject
 
   setVariable: (name, val) ->
     @family.geometry.setBufferVal @id, name, val
+
+  dispose: ()->
+    @family.geometry.dispose @id
 
 
   lookupShapeDef: (id) -> @family.definition.lookupShape id

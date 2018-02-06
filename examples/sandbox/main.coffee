@@ -184,7 +184,7 @@ main = () ->
   nodeDef.bbox.xy = [nodew + 2*nodeSelectionBorderMaxSize, nodeh + 2*nodeSelectionBorderMaxSize]
 
 
-  vis = basegl.symbol div
+  vis  = basegl.symbol div
   vis1 = scene.add vis
   vis1.position.x = nodew/2 + nodeSelectionBorderMaxSize
   vis1.position.y = -80
@@ -255,6 +255,10 @@ main = () ->
 
   scene.addEventListener 'mousedown', (e) -> deselectAll e
 
+
+  scene.addEventListener 'keydown', (event) =>
+    if (event.code == 'Backspace') || (event.code == 'Delete')
+      selectedComponent?.dispose()
 
   # g1 = group [n1,n2,n3]
   # g1.position.x += 0
